@@ -204,7 +204,8 @@ class Hessian:
 			eigrank=np.linspace(0,3*self.N,3*self.N)
 			plt.plot(eigrank,self.eigval,'o')
 			plt.xlabel('rank')
-			plt.ylabel('energy')
+			plt.ylabel('eigenvalue')
+			plt.title('Eigenvalues of the Hessian')
         
         ##=============== Diagnostic output =============================================
         # Debugging output to check on usepts modes

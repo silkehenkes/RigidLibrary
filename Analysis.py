@@ -157,7 +157,7 @@ class Analysis:
 						
 		if (plotStress):
 			print("Plot Stress is still under construction.")
-						
+		plt.title('Forces and contacts')				
 		axval.axis('scaled')
 		if self.conf.datatype=='simulation':
                         axval.set_xlim(-self.Lx/2,self.Lx/2)
