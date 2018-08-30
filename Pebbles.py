@@ -44,6 +44,15 @@ class Pebbles:
                     print "Atypical pebble game, stopping for now as unclear meaning. If you really must, construct a new modifier type to deal with this game and any extra / deleted contacts."
             else:
                 print "Modified pebble games (2nd neighbours, or single contacts, or deleted contacts). Not implemented yet, please construct new functions similar to AddFrictionalBonds(conf) to modify contact lists."
+            # Reverse connection object: necessary for marking both rigid clusters and overconstrained regions
+            self.conmat=[[] for _ in range(self.N)]
+            for k in range(self.ncon2):
+                    i=int(self.Ifull[k])
+                    j=int(self.Jfull[k])
+                    self.conmat[i].append(k)
+                    self.conmat[j].append(k)
+                    if self.verbose:
+                            print 'Contact ' + str(k) + ' with particles ' + str(i) + ' ' + str(j)
                         
          
         ### ===================== Functions to add extra bonds or otherwise modify the contact list =============
@@ -66,15 +75,7 @@ class Pebbles:
                             self.Jfull[conf.ncon+jj]=conf.J[k]
                             jj+=1
             print("Sizes of full contact objects:" + str(len(self.Ifull)))
-            # Reverse connection object: necessary for marking both rigid clusters and overconstrained regions
-            self.conmat=[[] for _ in range(self.N)]
-            for k in range(self.ncon2):
-                    i=int(self.Ifull[k])
-                    j=int(self.Jfull[k])
-                    self.conmat[i].append(k)
-                    self.conmat[j].append(k)
-                    if self.verbose:
-                            print 'Contact ' + str(k) + ' with particles ' + str(i) + ' ' + str(j)
+            
         
         # Here go further methods to either add bonds, remove bonds or modify the connectivity
         
