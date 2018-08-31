@@ -89,48 +89,42 @@ class Pebbles:
 		return 0
          
         ############  Kuang's AddSomeContacts, need to be modified to be compatible with class structure
-        #def AddSomeContacts(Contacts,coordinates,size,percentage):
-	#new_length=float(len(Contacts[:,0]))*(1+0.01*percentage)
-	#Contacts_new=np.zeros((int(new_length),len(Contacts[0,:])))
-	#double_bonds=0.0
-	#for k in range(len(Contacts[:,0])):
-		#if Contacts[k,2]==0:
-			#double_bonds+=1.0
-	#fraction_double_bonds=double_bonds/float(len(Contacts[:,0]))
-	#Num_add_d_bonds=int(fraction_double_bonds*new_length-double_bonds)
-	#New_I=[]
-	#New_J=[]
-	#for i in range(size-1):
-		#for j in range(i+1,size):
-			#if abs(coordinates[i,0]-coordinates[j,0])<1.2*(coordinates[i,2]+coordinates[j,2]) and abs(coordinates[i,1]-coordinates[j,1])<1.2*(coordinates[i,2]+coordinates[j,2]):
-				#for k in range(len(Contacts[:,0])):
-					#if Contacts[k,0]==i and Contacts[k,1]==j:
-						#break
-					#else:
-						#if Contacts[k,0]==j and Contacts[k,1]==i:
-							#break
-						#else:
-							#New_I.append(i)
-							#New_J.append(j)
-							#break
-	#for k in range(len(Contacts_new[:,0])):
-		#if k<len(Contacts[:,0]):
-			#Contacts_new[k,:]=Contacts[k,:]
-		#else:
-			#x=random.random()
-			#temp=int(len(New_I)*x)
-			#Contacts_new[k,0]=New_I[temp]
-			#Contacts_new[k,1]=New_J[temp]
-			#if k<(len(Contacts[:,0])+Num_add_d_bonds):
-				#Contacts_new[k,2]=0
-				#Contacts_new[k,3]=0.1
-				#Contacts_new[k,4]=1.0
-			#else:
-				#Contacts_new[k,2]=1
-				#Contacts_new[k,3]=1.0
-				#Contacts_new[k,4]=1.0
-	#return Contacts_new
-		
+   #      def AddSomeContacts(self,conf,percentage):
+			# new_ncon=int((1+0.01*percentage)*conf.ncon)
+			# self.Iadded=[0]*new_ncon
+			# self.Jadded=[0]*new_ncon
+			# self.fullmobiadded=np.zeros(new_ncon)
+			# self.Iadded[:conf.ncon]=conf.I
+			# self.Jadded[:conf.ncon]=conf.J
+			# self.fullmobiadded[:conf.ncon]=conf.fullmobi
+			# fraction_double_bonds=float(np.sum(conf.fullmobi==0)/conf.ncon)
+			# Num_add_d_bonds=int(fraction_double_bonds*percentage*conf.ncon)
+
+			# I_base=[]
+			# J_base=[]
+			# for i in range(len(conf.x)-1):
+			# 	for j in range(i+1,len(conf.x)):
+			# 		if abs(conf.x[i]-conf.x[j])<=(conf.rad[i]+conf.rad[j]) and abs(conf.y[i]-conf.y[j])<=(conf.rad[i]+conf.rad[j]):
+			# 			for k in range(len(conf.I)):
+			# 				if conf.I[k]==i and conf.J[k]==j:
+			# 					break
+			# 				else:
+			# 					if conf.I[k]==j and conf.J[k]==i:
+			# 						break
+			# 					else:
+			# 						I_base.append(i)
+			# 						J.base.append(j)
+			# 						break
+
+			# Order=random.shuffle(list(range(0, len(I_base))))
+			# for i in range(new_ncon-conf.ncon):
+			# 	self.Iadded[conf.ncon+i]=I_base[Order[i]]
+			# 	self.Jadded[conf.ncon+i]=J_base[Order[i]]
+			# 	if i>=Num_add_d_bonds :
+			# 		self.fullmobiadded[conf.ncon+i]=1
+
+			################conf.ncon, conf.fnor, conf.ftan, conf.fullmobi need to be updated.
+				
 	### ================================ The pebble game ==============================================
 	def play_game(self):
 		# pebbles, defined on particles
