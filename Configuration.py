@@ -431,4 +431,64 @@ class Configuration:
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
                 return x0,x1,y0,y1
-                
+        
+
+        def AddBoundaryContactss(Contacts,coordinates,size,file_second,pre):
+            filename=file_second + pre + 'coordinates.txt'
+            New_coordinates=np.zeros((size+4,3))
+            New_coordinates[0:size,:]=coordinates
+            up=max(coordinates[:,1])
+            down=min(coordinates[:,1])
+            left=min(coordinates[:,0])
+            right=max(coordinates[:,0])
+            New_coordinates[size+0,:]=[(left+right)*0.5,up+50.0,20.0]
+            New_coordinates[size+1,:]=[(left+right)*0.5,down-50.0,20.0]
+            New_coordinates[size+2,:]=[left-50.0,(up+down)*0.5,20.0]
+            New_coordinates[size+3,:]=[right+50.0,(up+down)*0.5,20.0]
+            np.savetxt(filename,New_coordinates)
+
+
+            List_I_add=[]
+            List_J_add=[]
+            for k in range(len(coordinates[:,0])):
+                if abs(coordinates[k,1]-up)<15:
+                    z=0
+                    for i in range(len(Contacts[:,0])):
+                        if Contacts[i,0]==k or Contacts[i,1]==k:
+                            z+=1
+                    if z>0:
+                        List_I_add.append(size+0)
+                        List_J_add.append(k)
+                if abs(coordinates[k,1]-down)<15:
+                    z=0
+                    for i in range(len(Contacts[:,0])):
+                        if Contacts[i,0]==k or Contacts[i,1]==k:
+                            z+=1
+                    if z>0:
+                        List_I_add.append(size+1)
+                        List_J_add.append(k)
+                # if abs(coordinates[k,0]-left)<15:
+                #   z=0
+                #   for i in range(len(Contacts[:,0])):
+                #       if Contacts[i,0]==k or Contacts[i,1]==k:
+                #           z+=1
+                #   if z>0:
+                #       List_I_add.append(size+2)
+                #       List_J_add.append(k)
+                # if abs(coordinates[k,0]-right)<15:
+                #   z=0
+                #   for i in range(len(Contacts[:,0])):
+                #       if Contacts[i,0]==k or Contacts[i,1]==k:
+                #           z+=1
+                #   if z>0:
+                #       List_I_add.append(size+3)
+                #       List_J_add.append(k)
+
+            
+            New_Contacts=np.ones((len(Contacts[:,0])+len(List_I_add),len(Contacts[0,:])))
+            New_Contacts[0:len(Contacts[:,0]),:]=Contacts
+            New_Contacts[len(Contacts[:,0]):(len(Contacts[:,0])+len(List_I_add)),0]=np.asarray(List_I_add).transpose()
+            New_Contacts[len(Contacts[:,0]):(len(Contacts[:,0])+len(List_I_add)),1]=np.asarray(List_J_add).transpose()
+            #New_Contacts[len(Contacts[:,0]):(len(Contacts[:,0])+len(List_I_add)),2]=0
+
+            return New_coordinates, New_Contacts
