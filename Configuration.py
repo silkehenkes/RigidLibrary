@@ -272,8 +272,9 @@ class Configuration:
                     self.radnext=1 # purely so that we can divide by it ...
                     self.Nnext=0
                 # Slight overkill, but then this enforces unified syntax with simulation, making our job below easier
-                self.dx=self.xnext-self.x
-                self.dy=self.ynext-self.y
+                if len(self.xnext)==len(self.x):
+                    self.dx=self.xnext-self.x
+                    self.dy=self.ynext-self.y
             
 	
 	#### ======================== Analysis helper functions	 =================================================
@@ -433,62 +434,141 @@ class Configuration:
                 return x0,x1,y0,y1
         
 
-        def AddBoundaryContactss(Contacts,coordinates,size,file_second,pre):
-            filename=file_second + pre + 'coordinates.txt'
-            New_coordinates=np.zeros((size+4,3))
-            New_coordinates[0:size,:]=coordinates
-            up=max(coordinates[:,1])
-            down=min(coordinates[:,1])
-            left=min(coordinates[:,0])
-            right=max(coordinates[:,0])
-            New_coordinates[size+0,:]=[(left+right)*0.5,up+50.0,20.0]
-            New_coordinates[size+1,:]=[(left+right)*0.5,down-50.0,20.0]
-            New_coordinates[size+2,:]=[left-50.0,(up+down)*0.5,20.0]
-            New_coordinates[size+3,:]=[right+50.0,(up+down)*0.5,20.0]
-            np.savetxt(filename,New_coordinates)
+        def AddBoundaryContacts(self):
+        	threshold=15 # Threshold to check if a particle is close enough to walls.
+            size=len(self.x)
+            up=max(self.y)
+            down=min(self.y)
+            left=min(self.x)
+            right=max(self.x)
+            Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
+            Boundaries[0,:]=[(left+right)*0.5,up+50.0,20.0]
+            Boundaries[1,:]=[(left+right)*0.5,down-50.0,20.0]
+            Boundaries[2,:]=[left-50.0,(up+down)*0.5,20.0]
+            Boundaries[3,:]=[right+50.0,(up+down)*0.5,20.0]
 
-
-            List_I_add=[]
-            List_J_add=[]
-            for k in range(len(coordinates[:,0])):
-                if abs(coordinates[k,1]-up)<15:
+            fullmobi_add=list(self.fullmobi)
+            fnor_add=list(self.fnor)
+            ftan_add=list(self.ftan)
+            nx_add=list(self.nx)
+            ny_add=list(self.ny)
+            for k in range(len(self.x)):
+                if abs(self.y[k]-up)<threshold:
                     z=0
-                    for i in range(len(Contacts[:,0])):
-                        if Contacts[i,0]==k or Contacts[i,1]==k:
+                    for i in range(len(self.I)):
+                        if self.I[i]==k or self.J[i]==k:
+                            z+=1
+                    if z>0: # Particles with no contact with other particles must have no contact with walls.
+                        self.I.append(size+0)
+                        self.J.append(k)
+                        fnor_add.append(np.mean(self.fnor))
+                        ftan_add.append(np.mean(self.ftan))
+                        fullmobi_add.append(1)
+                        nx_add.append(0) # Bonds connecting particles and upper boundary are perpendicular to the boundary.
+                        ny_add.append(-1)
+                if abs(self.y[k]-down)<threshold:
+                    z=0
+                    for i in range(len(self.I)):
+                        if self.I[i]==k or self.J[i]==k:
                             z+=1
                     if z>0:
-                        List_I_add.append(size+0)
-                        List_J_add.append(k)
-                if abs(coordinates[k,1]-down)<15:
-                    z=0
-                    for i in range(len(Contacts[:,0])):
-                        if Contacts[i,0]==k or Contacts[i,1]==k:
-                            z+=1
-                    if z>0:
-                        List_I_add.append(size+1)
-                        List_J_add.append(k)
-                # if abs(coordinates[k,0]-left)<15:
-                #   z=0
-                #   for i in range(len(Contacts[:,0])):
-                #       if Contacts[i,0]==k or Contacts[i,1]==k:
-                #           z+=1
-                #   if z>0:
-                #       List_I_add.append(size+2)
-                #       List_J_add.append(k)
-                # if abs(coordinates[k,0]-right)<15:
-                #   z=0
-                #   for i in range(len(Contacts[:,0])):
-                #       if Contacts[i,0]==k or Contacts[i,1]==k:
-                #           z+=1
-                #   if z>0:
-                #       List_I_add.append(size+3)
-                #       List_J_add.append(k)
+                        self.I.append(size+1)
+                        self.J.append(k)
+                        fnor_add.append(np.mean(self.fnor))
+                        ftan_add.append(np.mean(self.ftan))
+                        fullmobi_add.append(1)
+                        nx_add.append(0)
+                        ny_add.append(1)
+                if abs(self.x[k]-left)<threshold:
+                  z=0
+                  for i in range(len(self.I)):
+                      if self.I[i]==k or self.J[i]==k:
+                          z+=1
+                  if z>0:
+                      self.I.append(size+2)
+                      self.J.append(k)
+                      fnor_add.append(np.mean(self.fnor))
+                      ftan_add.append(np.mean(self.ftan))
+                      fullmobi_add.append(1)
+                      nx_add.append(1)
+                      ny_add.append(0)
+                if abs(self.x[k]-right)<threshold:
+                  z=0
+                  for i in range(len(self.I)):
+                      if self.I[i]==k or self.J[i]==k:
+                          z+=1
+                  if z>0:
+                      self.I.append(size+3)
+                      self.J.append(k)
+                      fnor_add.append(np.mean(self.fnor))
+                      ftan_add.append(np.mean(self.ftan))
+                      fullmobi_add.append(1)
+                      nx_add.append(-1)
+                      ny_add.append(0)
 
-            
-            New_Contacts=np.ones((len(Contacts[:,0])+len(List_I_add),len(Contacts[0,:])))
-            New_Contacts[0:len(Contacts[:,0]),:]=Contacts
-            New_Contacts[len(Contacts[:,0]):(len(Contacts[:,0])+len(List_I_add)),0]=np.asarray(List_I_add).transpose()
-            New_Contacts[len(Contacts[:,0]):(len(Contacts[:,0])+len(List_I_add)),1]=np.asarray(List_J_add).transpose()
-            #New_Contacts[len(Contacts[:,0]):(len(Contacts[:,0])+len(List_I_add)),2]=0
+            self.x_new=np.zeros(size+4)
+            self.y_new=np.zeros(size+4)
+            self.rad_new=np.zeros(size+4)
 
-            return New_coordinates, New_Contacts
+            self.x_new[0:size]=self.x
+            self.x_new[size:]=Boundaries[:,0]
+            self.y_new[0:size]=self.y
+            self.y_new[size:]=Boundaries[:,1]
+            self.rad_new[0:size]=self.rad
+            self.rad_new[size:]=Boundaries[:,2]
+
+            del self.x
+            del self.y
+            del self.rad
+
+            self.x=self.x_new
+            self.y=self.y_new
+            self.rad=self.rad_new
+            self.N+=4
+
+            self.Lx=np.amax(self.x)-np.amin(self.x)
+            self.Ly=np.amax(self.y)-np.amin(self.y)
+
+            self.ncon=len(self.I)
+            self.fnor=np.asarray(fnor_add)
+            self.ftan=np.asarray(ftan_add)
+            self.fullmobi=np.asarray(fullmobi_add)
+            self.nx=np.asarray(nx_add)
+            self.ny=np.asarray(ny_add)
+
+        def AddNextBoundaryContacts(self):
+            size=len(self.xnext)
+            up=max(self.ynext)
+            down=min(self.ynext)
+            left=min(self.xnext)
+            right=max(self.xnext)
+            Boundaries=np.zeros((4,3))
+            Boundaries[0,:]=[(left+right)*0.5,up+50.0,20.0]
+            Boundaries[1,:]=[(left+right)*0.5,down-50.0,20.0]
+            Boundaries[2,:]=[left-50.0,(up+down)*0.5,20.0]
+            Boundaries[3,:]=[right+50.0,(up+down)*0.5,20.0]
+
+            self.x_new=np.zeros(size+4)
+            self.y_new=np.zeros(size+4)
+            self.rad_new=np.zeros(size+4)
+
+            self.x_new[0:size]=self.xnext
+            self.x_new[size:]=Boundaries[:,0]
+            self.y_new[0:size]=self.ynext
+            self.y_new[size:]=Boundaries[:,1]
+            self.rad_new[0:size]=self.radnext
+            self.rad_new[size:]=Boundaries[:,2]
+
+            del self.xnext
+            del self.ynext
+            del self.radnext
+
+            self.xnext=self.x_new
+            self.ynext=self.y_new
+            self.radnext=self.rad_new
+            self.Nnext+=4
+
+            self.Lxnext=np.amax(self.xnext)-np.amin(self.xnext)
+            self.Lynext=np.amax(self.ynext)-np.amin(self.ynext)
+            self.dx=self.xnext-self.x
+            self.dy=self.ynext-self.y

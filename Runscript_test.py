@@ -14,13 +14,13 @@ import Analysis as AN
 import matplotlib.pyplot as plt
 
 # Location of data to analyse
-topdir='/home/sh18581/Documents/Friction/Debug/Shear/'
+topdir=''
 # experimental friction coefficient
 mu=0.3
 # More information about data set
 directions=['forward']
 experiment_nums=['23']
-inilabel=5406
+inilabel=5384
 dlabel=2
 #nsteps=12
 nsteps=2
@@ -45,10 +45,12 @@ for experiment in experiment_nums:
                         numlabel = "%05d" %numlabel0
                         #def ReadExpdata(self,numlabel,scale=False):
                         ThisConf.ReadExpdata(numlabel)
+                        ThisConf.AddBoundaryContacts()
                         # also read in the next data at this point: dlabel further along in the numbering 
                         #def ReadExpdataNext(self,numlabel,scale=False):
                         numlabel2 =  "%05d" %(numlabel0+dlabel)
                         ThisConf.ReadExpdataNext(numlabel2)
+                        ThisConf.AddNextBoundaryContacts()
                        
                         ########## Setting up and playing the pebble game
                         # def __init__(self,conf, game10,game20,modifier='nothing',verbose0=False):
