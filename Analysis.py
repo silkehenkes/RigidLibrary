@@ -165,8 +165,8 @@ class Analysis:
                 elif self.conf.datatype=='experiment':
                         xmin=np.amin(self.conf.x)-20
                         ymin=np.amin(self.conf.y)-20
-                        axval.set_xlim(xmin,xmin+self.Lx+40)
-                        axval.set_ylim(ymin,ymin+self.Ly+40)
+                        axval.set_xlim(xmin,xmin+self.Lx+120)
+                        axval.set_ylim(ymin,ymin+self.Ly+120)
 		# returning figure pointer for use outside (like plotting or saving)
 		if 'figure' in kwargs:
 			return fig
@@ -307,8 +307,8 @@ class Analysis:
                 elif self.conf.datatype=='experiment':
                         xmin=np.amin(self.conf.x)-20
                         ymin=np.amin(self.conf.y)-20
-                        axval.set_xlim(xmin,xmin+self.Lx+40)
-                        axval.set_ylim(ymin,ymin+self.Ly+40)
+                        axval.set_xlim(xmin,xmin+self.Lx+120)
+                        axval.set_ylim(ymin,ymin+self.Ly+120)
 		axval.set_title('System with ' + str(self.pebbles.freepeb) + ' free pebbles and ' + str(self.pebbles.fail) + ' failed contacts')
 		# returning figure pointer for use outside (like plotting or saving)
 		if 'figure' in kwargs:

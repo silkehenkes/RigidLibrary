@@ -14,7 +14,8 @@ import Analysis as AN
 import matplotlib.pyplot as plt
 
 # Location of data to analyse
-topdir=''
+#topdir=''
+topdir='/home/sh18581/Documents/Friction/Debug/Shear/'
 # experimental friction coefficient
 mu=0.3
 # More information about data set

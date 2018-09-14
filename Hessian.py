@@ -76,7 +76,7 @@ class Hessian:
 			    fn = kn*(self.conf.rad[i]+self.conf.rad[j]-rval)
 			    if fn<0:
 			        print "Funny contact with negative overlap between " + str(i)+ " and " + str(j)
-			    fn=0.0
+                                fn=0.0
 			else:
 			    fn=self.conf.fnor[k]
 			if frictional:

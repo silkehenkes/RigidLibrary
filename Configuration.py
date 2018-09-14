@@ -18,6 +18,7 @@ class Configuration:
         def __init__(self,folder,datatype,mu0=0.2,prefix10='DSC',prefix20='_solved_Tracke_'):
             self.folder = folder
             self.datatype=datatype
+            self.addBoundary=False
             if (datatype=='simulation'):
                 print "Reading simulation data!"
                 self.getParameters(folder)
@@ -65,79 +66,79 @@ class Configuration:
 
         #######========== Simulation data read-in ================== 
         # snap is the label, and distSnapshot tells me how many time units they are apart (in actual time, not steps)
-	def readSimdata(self,snap,verbose0,distSnapshot0=100.0):
-		self.verbose=verbose0
-		self.distSnapshot=distSnapshot0
-		self.strain=self.gammadot*(1.0*snap)*self.distSnapshot
-		if (self.verbose):
-			print('L=' + str(self.L))
-			print('Np=' + str(self.N))
-			print('mu=' + str(self.mu))
-			print('xi=' + str(self.xi))
-			print('phi=' + str(self.phi))
-			print('strain=' + str(self.strain))
-		filename=foldername + '/PosVel' + str(snap) + '.dat'
-		if (self.verbose):
-			print(filename)
-		isPosdata=False
-		# Only if: 1) The file exists 2) is not empty 
-		try:
+        def readSimdata(self,snap,verbose0,distSnapshot0=100.0):
+                self.verbose=verbose0
+                self.distSnapshot=distSnapshot0
+                self.strain=self.gammadot*(1.0*snap)*self.distSnapshot
+                if (self.verbose):
+                        print('L=' + str(self.L))
+                        print('Np=' + str(self.N))
+                        print('mu=' + str(self.mu))
+                        print('xi=' + str(self.xi))
+                        print('phi=' + str(self.phi))
+                        print('strain=' + str(self.strain))
+                filename=foldername + '/PosVel' + str(snap) + '.dat'
+                if (self.verbose):
+                        print(filename)
+                isPosdata=False
+                # Only if: 1) The file exists 2) is not empty 
+                try:
                         data=np.loadtxt(filename)
                         if (len(data.shape)>1):
                                 isPosdata=True	
-		except:
+                except:
                         isPosdata=False
                         
-		if (not isPosdata):
-			print('error: no position data at snapshot' + str(snap))
-			self.x=0.0
-			self.y=0.0
-			self.dx=0.0
-			self.dy=0.0
-			self.alpha=0.0
-			self.N=0
-		else:
-			self.x=data[0,:]
-			self.y=data[1,:]
-			self.alpha=data[2,:]
-			self.dx=data[3,:]
-			self.dy=data[4,:]
-			self.dalpha=data[5,:]
-			del data
-		
-		filename=foldername + '/Contact' + str(snap) + '.dat'
-		if (self.verbose):
-			print(filename)
-		isCondata=False
-		# Only if: 1) The file exists 2) is not empty 3) is longer than 1 contact (garbage avoiding device .. hope for the best. Some of these got cut off mid-writing)
-		try:
+                if (not isPosdata):
+                        print('error: no position data at snapshot' + str(snap))
+                        self.x=0.0
+                        self.y=0.0
+                        self.dx=0.0
+                        self.dy=0.0
+                        self.alpha=0.0
+                        self.N=0
+                else:
+                        self.x=data[0,:]
+                        self.y=data[1,:]
+                        self.alpha=data[2,:]
+                        self.dx=data[3,:]
+                        self.dy=data[4,:]
+                        self.dalpha=data[5,:]
+                        del data
+                
+                filename=foldername + '/Contact' + str(snap) + '.dat'
+                if (self.verbose):
+                        print(filename)
+                isCondata=False
+                # Only if: 1) The file exists 2) is not empty 3) is longer than 1 contact (garbage avoiding device .. hope for the best. Some of these got cut off mid-writing)
+                try:
                         data=np.loadtxt(filename)
                         if (len(data.shape)>1):
                                 isCondata=True	
                 except:
                         isCondata=False
-		if ((not isCondata) or (not isPosdata)):
-			print('error: no position data at snapshot' + str(snap))
-			self.noConf=True
-			self.I=-1
-			self.J=-1
-			self.fullmobi=0
-			self.Ifull=-1
-			self.Jfull=-1
-		else:
-			self.noConf=False
-			self.I=list(data[0,:].astype(int))
-			self.J=list(data[1,:].astype(int))
-			self.fullmobi=data[4,:].astype(int)
-			self.nx=data[2,:]
-			self.ny=data[3,:]
-			self.fnor=data[5,:]
-			self.ftan=data[6,:]+data[7,:]
-			del data
-			self.x-=self.L*np.round(self.x/self.L)
-			self.y-=self.L*np.round(self.y/self.L)
-			self.ncon=len(self.I)
-			
+                if ((not isCondata) or (not isPosdata)):
+                        print('error: no position data at snapshot' + str(snap))
+                        self.noConf=True
+                        self.I=-1
+                        self.J=-1
+                        self.fullmobi=0
+                        self.Ifull=-1
+                        self.Jfull=-1
+                else:
+                        self.noConf=False
+                        self.I=list(data[0,:].astype(int))
+                        self.J=list(data[1,:].astype(int))
+                        self.fullmobi=data[4,:].astype(int)
+                        self.nx=data[2,:]
+                        self.ny=data[3,:]
+                        self.fnor=data[5,:]
+                        self.ftan=data[6,:]+data[7,:]
+                        del data
+                        self.x-=self.L*np.round(self.x/self.L)
+                        self.y-=self.L*np.round(self.y/self.L)
+                        self.ncon=len(self.I)
+                        
         #========== Experimental data read-in ==================
         def ReadExpdata(self,numlabel):
                     
@@ -245,7 +246,7 @@ class Configuration:
                         self.nx[k]=(x2-x1)/rij
                         self.ny[k]=(y2-y1)/rij
                 return 0
-		
+                
             
 
         # same kind of procedure, but get only the next positions and don't redefine things
@@ -275,60 +276,196 @@ class Configuration:
                 if len(self.xnext)==len(self.x):
                     self.dx=self.xnext-self.x
                     self.dy=self.ynext-self.y
+         
+        #### ======================== Boundary integration =======================================================
+        def AddBoundaryContacts(self,threshold=20,Brad=20.0):
+            self.addBoundary=True
+            # Threshold to check if a particle is close enough to walls.
+            upidx=np.argmax(self.y)
+            downidx=np.argmin(self.y)
+            leftidx=np.argmin(self.x)
+            rightidx=np.argmax(self.x)
             
-	
-	#### ======================== Analysis helper functions	 =================================================
-	
-	# computes basic contact, force, torque, and stress statistics
+            # Boundary posiitons:
+            # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+            up=self.y[upidx]
+            yup = up+self.rad[upidx]
+            down=self.y[downidx]
+            ydown = down-self.rad[downidx]
+            left=self.x[leftidx]
+            xleft=left-self.rad[leftidx]
+            right=self.x[rightidx]
+            xright=right+self.rad[rightidx]
+            print yup,ydown,xleft,xright
+            
+            # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+            Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
+            Boundaries[0,:]=[(left+right)*0.5,yup+Brad,Brad]
+            Boundaries[1,:]=[(left+right)*0.5,ydown-Brad,Brad]
+            Boundaries[2,:]=[xleft-Brad,(up+down)*0.5,Brad]
+            Boundaries[3,:]=[xright+Brad,(up+down)*0.5,Brad]
+            
+            # Find the particles in contact with the boundary, and label correctly
+            self.bindices=[self.N,self.N+1,self.N+2,self.N+3]
+            padd=[]
+            labels=[]
+            pup =  np.nonzero(np.abs(self.y+self.rad-yup)<threshold)[0]
+            padd.extend(pup)
+            labels.extend([0 for k in range(len(pup))])
+            pdown =  np.nonzero(np.abs(self.y-self.rad-ydown)<threshold)[0]
+            padd.extend(pdown)
+            labels.extend([1 for k in range(len(pdown))])
+            pleft = np.nonzero(np.abs(self.x-self.rad-xleft)<threshold)[0]
+            padd.extend(pleft)
+            labels.extend([2 for k in range(len(pleft))])
+            pright = np.nonzero(np.abs(self.x+self.rad-xright)<threshold)[0]
+            padd.extend(pright)
+            labels.extend([3 for k in range(len(pright))])
+            print padd
+            print labels
+            
+            fullmobi_add=[]
+            fnor_add=[]
+            ftan_add=[]
+            nx_add=[]
+            ny_add=[]
+            for k in range(len(padd)):
+                # does this guy have neighbours?
+                neii=np.nonzero(self.I[:self.ncon]==padd[k])[0]
+                neij=np.nonzero(self.J[:self.ncon]==padd[k])[0]
+                # if yes add the boundary contacts
+                if (len(neii)>0 or len(neij)>0):
+                    self.I.append(self.bindices[labels[k]])
+                    self.J.append(padd[k])
+                    if (labels[k])==0:
+                        nx0=0
+                        ny0=-1
+                    elif (labels[k]==1):
+                        nx0=0
+                        ny0=1
+                    elif (labels[k]==2):
+                        nx0=1
+                        ny0=0
+                    else:
+                        nx0=-1
+                        ny0=0
+                    # compute force on this contact by force balance
+                    # two minus signs on second part cancel out
+                    ftotx=np.sum(self.fnor[neii]*self.nx[neii]-self.ftan[neii]*self.ny[neii])+np.sum(self.fnor[neij]*self.nx[neij]-self.ftan[neij]*self.ny[neij])
+                    ftoty=np.sum(self.fnor[neii]*self.ny[neii]+self.ftan[neii]*self.nx[neii])+np.sum(self.fnor[neij]*self.ny[neij]+self.ftan[neij]*self.nx[neij])
+                    # -(fx*nx+fy*ny)
+                    fnor0=-ftotx*nx0-ftoty*ny0
+                    # - (fx*(-ny)+fy*nx)
+                    ftan0=-ftotx*(-ny0)-ftoty*nx0
+                    if (abs(ftan0)/fnor0>self.mu):
+                        fullmobi_add.append(1)
+                    else:
+                        fullmobi_add.append(0)
+                    fnor_add.append(fnor0)
+                    ftan_add.append(ftan0)
+                    nx_add.append(nx0)
+                    ny_add.append(ny0)
+            # Finally stick it at the end of the existing data
+            self.x=np.concatenate((self.x,Boundaries[:,0]))
+            self.y=np.concatenate((self.y,Boundaries[:,1]))
+            self.rad=np.concatenate((self.rad,Boundaries[:,2]))
+            self.fnor=np.concatenate((self.fnor,np.array(fnor_add)))
+            self.ftan=np.concatenate((self.ftan,np.array(ftan_add)))
+            self.fullmobi=np.concatenate((self.fullmobi,np.array(fullmobi_add)))
+            self.nx=np.concatenate((self.nx,np.array(nx_add)))
+            self.ny=np.concatenate((self.ny,np.array(ny_add)))
+            self.ncon=len(self.I)
+            self.N+=4
+            print self.ncon
+                    
+          
+
+        def AddNextBoundaryContacts(self,threshold=15,Brad=20.0):
+            # Threshold to check if a particle is close enough to walls.
+            upidx=np.argmax(self.ynext)
+            downidx=np.argmin(self.ynext)
+            leftidx=np.argmin(self.xnext)
+            rightidx=np.argmax(self.xnext)
+            
+            # Boundary posiitons:
+            # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+            up=self.ynext[upidx]
+            yup = up+Brad+self.radnext[upidx]
+            down=self.ynext[downidx]
+            ydown = down-Brad-self.radnext[downidx]
+            left=self.xnext[leftidx]
+            xleft=left-Brad-self.radnext[leftidx]
+            right=self.xnext[rightidx]
+            xright=right+Brad+self.radnext[rightidx]
+            
+            # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+            Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
+            Boundaries[0,:]=[(left+right)*0.5,yup,Brad]
+            Boundaries[1,:]=[(left+right)*0.5,ydown,Brad]
+            Boundaries[2,:]=[xleft,(up+down)*0.5,Brad]
+            Boundaries[3,:]=[xright,(up+down)*0.5,Brad]
+            
+            
+            self.xnext=np.concatenate((self.xnext,Boundaries[:,0]))
+            self.ynext=np.concatenate((self.ynext,Boundaries[:,1]))
+            self.radnext=np.concatenate((self.radnext,Boundaries[:,2]))
+
+            self.dx=self.xnext-self.x
+            self.dy=self.ynext-self.y
+            self.Nnext+=4
+        
+        #### ======================== Analysis helper functions	 =================================================
+        
+        # computes basic contact, force, torque, and stress statistics
         def getStressStat(self):
                 fsumx=np.empty((self.N,))
-		fsumy=np.empty((self.N,))
-		torsum=np.empty((self.N,))
-		#------- those useful for plotting ----
-		self.prepart=np.empty((self.N,))
-		self.sxxpart=np.empty((self.N,))
-		self.syypart=np.empty((self.N,))
-		self.sxypart=np.empty((self.N,))
-		self.syxpart=np.empty((self.N,))
-		#-------------------------------------
-		for u in range(self.N):
-			# problem - self.I doesn't seem to behave as an integer ...
-			# apparently this only works with arrays, not with lists??
-			c1=np.nonzero(np.array(self.I)==u)
-			c2=np.nonzero(np.array(self.J)==u)
-		
-			fsumx[u]=np.sum(-self.fnor[c1[0]]*self.nx[c1[0]])+np.sum(self.fnor[c2[0]]*self.nx[c2[0]])+np.sum(self.ftan[c1[0]]*(-self.ny[c1[0]]))+np.sum(-self.ftan[c2[0]]*(-self.ny[c2[0]]))
-			fsumy[u]=np.sum(-self.fnor[c1[0]]*self.ny[c1[0]])+np.sum(self.fnor[c2[0]]*self.ny[c2[0]])+np.sum(self.ftan[c1[0]]*self.nx[c1[0]])+sum(-self.ftan[c2[0]]*self.nx[c2[0]])
-			torsum[u]=self.rad[u]*(np.sum(self.ftan[c1[0]])+np.sum(self.ftan[c2[0]]))
-			self.prepart[u]=np.sum(self.fnor[c1[0]]*self.rad[u])+np.sum(self.fnor[c2[0]]*self.rad[u])
-			self.sxxpart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.nx[c1[0]]*self.nx[c1[0]])+np.sum(self.fnor[c2[0]]*self.nx[c2[0]]*(-self.nx[c2[0]]))+np.sum(self.ftan[c1[0]]*(-self.ny[c1[0]])*(-self.ny[c1[0]]))+np.sum(-self.ftan[c2[0]]*(-self.ny[c2[0]])*(self.ny[c2[0]])))
-			self.syypart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.ny[c1[0]]*(self.ny[c1[0]]))+np.sum(self.fnor[c2[0]]*self.ny[c2[0]]*(-self.ny[c2[0]]))+np.sum(self.ftan[c1[0]]*(self.nx[c1[0]])*self.nx[c1[0]])+sum(-self.ftan[c2[0]]*self.nx[c2[0]]*(-self.nx[c2[0]])))
-			self.sxypart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.nx[c1[0]]*(-self.ny[c1[0]]))+np.sum(self.fnor[c2[0]]*self.nx[c2[0]]*(self.ny[c2[0]]))+np.sum(self.ftan[c1[0]]*(-self.ny[c1[0]])*(self.nx[c1[0]]))+np.sum(-self.ftan[c2[0]]*(-self.ny[c2[0]])*(-self.nx[c2[0]])))
-			self.syxpart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.ny[c1[0]]*(self.nx[c1[0]]))+np.sum(self.fnor[c2[0]]*self.ny[c2[0]]*(-self.nx[c2[0]]))+np.sum(self.ftan[c1[0]]*(self.nx[c1[0]])*(-self.ny[c1[0]]))+sum(-self.ftan[c2[0]]*self.nx[c2[0]]*(self.ny[c2[0]])))
-			del c1 
-			del c2
-		
-		# statistical output: don't do histograms here just yet; the problem of consistent and appropriate binning is too messy. 
-		# return the whole thing.
-		# except for the mobilization distribution which is unique
-		# just get a few signature parameters here
-		zav=2*len(self.I)/(1.0*self.N)
-		nm=len(np.nonzero(self.fullmobi>0)[0])/(1.0*self.N)
-		pres=np.sum(self.prepart)/(self.Lx*self.Ly)
-		sxx=np.sum(self.sxxpart)/(self.Lx*self.Ly)
-		syy=np.sum(self.syypart)/(self.Lx*self.Ly)
-		sxy=np.sum(self.sxypart)/(self.Lx*self.Ly)
-		syx=np.sum(self.syxpart)/(self.Lx*self.Ly)
-		fxbal=np.mean(abs(fsumx))/np.mean(self.fnor)
-		fybal=np.mean(abs(fsumy))/np.mean(self.fnor)
-		torbal=np.mean(abs(torsum))/(np.mean(self.fnor)*np.mean(self.rad)) # correct units; do *not* normalize with ftan; consider a mu though
-		mobin=np.linspace(-1,1,101)
-		mohist,bin_edges=np.histogram(self.ftan/(self.mu*self.fnor),mobin)
-		
-		return zav,nm,pres,fxbal,fybal,torbal,mobin,mohist,sxx,syy,sxy,syx	
-	
-	#### =================== Computes the D2_min, amount of non-affine motion around a particle ==============
-	def getD2min(self,threshold_rad):
+                fsumy=np.empty((self.N,))
+                torsum=np.empty((self.N,))
+                #------- those useful for plotting ----
+                self.prepart=np.empty((self.N,))
+                self.sxxpart=np.empty((self.N,))
+                self.syypart=np.empty((self.N,))
+                self.sxypart=np.empty((self.N,))
+                self.syxpart=np.empty((self.N,))
+                #-------------------------------------
+                for u in range(self.N):
+                        # problem - self.I doesn't seem to behave as an integer ...
+                        # apparently this only works with arrays, not with lists??
+                        c1=np.nonzero(np.array(self.I)==u)
+                        c2=np.nonzero(np.array(self.J)==u)
+                
+                        fsumx[u]=np.sum(-self.fnor[c1[0]]*self.nx[c1[0]])+np.sum(self.fnor[c2[0]]*self.nx[c2[0]])+np.sum(self.ftan[c1[0]]*(-self.ny[c1[0]]))+np.sum(-self.ftan[c2[0]]*(-self.ny[c2[0]]))
+                        fsumy[u]=np.sum(-self.fnor[c1[0]]*self.ny[c1[0]])+np.sum(self.fnor[c2[0]]*self.ny[c2[0]])+np.sum(self.ftan[c1[0]]*self.nx[c1[0]])+sum(-self.ftan[c2[0]]*self.nx[c2[0]])
+                        torsum[u]=self.rad[u]*(np.sum(self.ftan[c1[0]])+np.sum(self.ftan[c2[0]]))
+                        self.prepart[u]=np.sum(self.fnor[c1[0]]*self.rad[u])+np.sum(self.fnor[c2[0]]*self.rad[u])
+                        self.sxxpart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.nx[c1[0]]*self.nx[c1[0]])+np.sum(self.fnor[c2[0]]*self.nx[c2[0]]*(-self.nx[c2[0]]))+np.sum(self.ftan[c1[0]]*(-self.ny[c1[0]])*(-self.ny[c1[0]]))+np.sum(-self.ftan[c2[0]]*(-self.ny[c2[0]])*(self.ny[c2[0]])))
+                        self.syypart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.ny[c1[0]]*(self.ny[c1[0]]))+np.sum(self.fnor[c2[0]]*self.ny[c2[0]]*(-self.ny[c2[0]]))+np.sum(self.ftan[c1[0]]*(self.nx[c1[0]])*self.nx[c1[0]])+sum(-self.ftan[c2[0]]*self.nx[c2[0]]*(-self.nx[c2[0]])))
+                        self.sxypart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.nx[c1[0]]*(-self.ny[c1[0]]))+np.sum(self.fnor[c2[0]]*self.nx[c2[0]]*(self.ny[c2[0]]))+np.sum(self.ftan[c1[0]]*(-self.ny[c1[0]])*(self.nx[c1[0]]))+np.sum(-self.ftan[c2[0]]*(-self.ny[c2[0]])*(-self.nx[c2[0]])))
+                        self.syxpart[u]=self.rad[u]*(np.sum(-self.fnor[c1[0]]*self.ny[c1[0]]*(self.nx[c1[0]]))+np.sum(self.fnor[c2[0]]*self.ny[c2[0]]*(-self.nx[c2[0]]))+np.sum(self.ftan[c1[0]]*(self.nx[c1[0]])*(-self.ny[c1[0]]))+sum(-self.ftan[c2[0]]*self.nx[c2[0]]*(self.ny[c2[0]])))
+                        del c1 
+                        del c2
+                
+                # statistical output: don't do histograms here just yet; the problem of consistent and appropriate binning is too messy. 
+                # return the whole thing.
+                # except for the mobilization distribution which is unique
+                # just get a few signature parameters here
+                zav=2*len(self.I)/(1.0*self.N)
+                nm=len(np.nonzero(self.fullmobi>0)[0])/(1.0*self.N)
+                pres=np.sum(self.prepart)/(self.Lx*self.Ly)
+                sxx=np.sum(self.sxxpart)/(self.Lx*self.Ly)
+                syy=np.sum(self.syypart)/(self.Lx*self.Ly)
+                sxy=np.sum(self.sxypart)/(self.Lx*self.Ly)
+                syx=np.sum(self.syxpart)/(self.Lx*self.Ly)
+                fxbal=np.mean(abs(fsumx))/np.mean(self.fnor)
+                fybal=np.mean(abs(fsumy))/np.mean(self.fnor)
+                torbal=np.mean(abs(torsum))/(np.mean(self.fnor)*np.mean(self.rad)) # correct units; do *not* normalize with ftan; consider a mu though
+                mobin=np.linspace(-1,1,101)
+                mohist,bin_edges=np.histogram(self.ftan/(self.mu*self.fnor),mobin)
+                
+                return zav,nm,pres,fxbal,fybal,torbal,mobin,mohist,sxx,syy,sxy,syx	
+        
+        #### =================== Computes the D2_min, amount of non-affine motion around a particle ==============
+        def getD2min(self,threshold_rad):
                 D2_min=np.zeros(len(self.x))
                 for k in range(len(self.x)):
                         temp=[]
@@ -371,24 +508,24 @@ class Configuration:
                                                                     
                 return D2_min
                 
-	
+        
         # ====== Experimental or simulation displacements, decomposed into normal, tangential and potentiallt rotational displecements
         def Disp2Contacts(self,minThresh,debug=False):
                 disp2n=np.zeros(self.ncon)
-		disp2t=np.zeros(self.ncon)
-		if self.hasAngles:
+                disp2t=np.zeros(self.ncon)
+                if self.hasAngles:
                     disp2r=np.zeros(self.ncon)
                     disp2gear=np.zeros(self.ncon)
-		for k in range(self.ncon):
-			i=self.I[k]
-			j=self.J[k]
-			nx0=self.nx[k]
-			ny0=self.ny[k]
-			tx0=-self.ny[k]
-			ty0=self.nx[k]
-			disp2n[k] = ((self.dx[j]-self.dx[i])*nx0+(self.dy[j]-self.dy[i])*ny0)**2
-			disp2t[k] = ((self.dx[j]-self.dx[i])*tx0+(self.dy[j]-self.dy[i])*ty0)**2
-			if self.hasAngles:
+                for k in range(self.ncon):
+                        i=self.I[k]
+                        j=self.J[k]
+                        nx0=self.nx[k]
+                        ny0=self.ny[k]
+                        tx0=-self.ny[k]
+                        ty0=self.nx[k]
+                        disp2n[k] = ((self.dx[j]-self.dx[i])*nx0+(self.dy[j]-self.dy[i])*ny0)**2
+                        disp2t[k] = ((self.dx[j]-self.dx[i])*tx0+(self.dy[j]-self.dy[i])*ty0)**2
+                        if self.hasAngles:
                             disp2r[0]=(self.rad[j]*self.dalpha[j]-self.rad[i]*self.dalpha[i])**2
                             disp2gear[0]=((self.dx[j]-self.dx[i])*tx0+(self.dy[j]-self.dy[i])*ty0 - (self.rad[i]*self.dalpha[i]+self.rad[j]*self.dalpha[j]))**2
                 thresh=np.mean(disp2n+disp2t)
@@ -402,8 +539,8 @@ class Configuration:
             
             
         ##================ Finally, pure helper functions: positions of both ends of a contact ===============
-	# get the cleaned up, periodic boundary conditions sorted out positions corresponding to two ends of a contact. 
-	# Basic plotting helper function
+        # get the cleaned up, periodic boundary conditions sorted out positions corresponding to two ends of a contact. 
+        # Basic plotting helper function
         def getConPos(self,k):
                 x0=self.x[self.I[k]]
                 x1=self.x[self.J[k]]
@@ -416,8 +553,14 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                if self.addBoundary:
+                    ival=self.I[k]
+                    if ((ival==self.bindices[0]) or (ival==self.bindices[1])): #top or bottom
+                        x0=x1
+                    if ((ival==self.bindices[2]) or (ival==self.bindices[3])): #left or right
+                        y0=y1
                 return x0,x1,y0,y1
-          
+        
         # same, but based on existing particle labels (in case those come from elsewhere)
         def getConPos2(self,k1,k2):
                 x0=self.x[k1]
@@ -431,144 +574,10 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                if self.addBoundary:
+                    if ((k1==self.bindices[0]) or (k1==self.bindices[1])): #top or bottom
+                        x0=x1
+                    if ((k1==self.bindices[2]) or (k1==self.bindices[3])): #left or right
+                        y0=y1
                 return x0,x1,y0,y1
         
-
-        def AddBoundaryContacts(self):
-        	threshold=15 # Threshold to check if a particle is close enough to walls.
-            size=len(self.x)
-            up=max(self.y)
-            down=min(self.y)
-            left=min(self.x)
-            right=max(self.x)
-            Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
-            Boundaries[0,:]=[(left+right)*0.5,up+50.0,20.0]
-            Boundaries[1,:]=[(left+right)*0.5,down-50.0,20.0]
-            Boundaries[2,:]=[left-50.0,(up+down)*0.5,20.0]
-            Boundaries[3,:]=[right+50.0,(up+down)*0.5,20.0]
-
-            fullmobi_add=list(self.fullmobi)
-            fnor_add=list(self.fnor)
-            ftan_add=list(self.ftan)
-            nx_add=list(self.nx)
-            ny_add=list(self.ny)
-            for k in range(len(self.x)):
-                if abs(self.y[k]-up)<threshold:
-                    z=0
-                    for i in range(len(self.I)):
-                        if self.I[i]==k or self.J[i]==k:
-                            z+=1
-                    if z>0: # Particles with no contact with other particles must have no contact with walls.
-                        self.I.append(size+0)
-                        self.J.append(k)
-                        fnor_add.append(np.mean(self.fnor))
-                        ftan_add.append(np.mean(self.ftan))
-                        fullmobi_add.append(1)
-                        nx_add.append(0) # Bonds connecting particles and upper boundary are perpendicular to the boundary.
-                        ny_add.append(-1)
-                if abs(self.y[k]-down)<threshold:
-                    z=0
-                    for i in range(len(self.I)):
-                        if self.I[i]==k or self.J[i]==k:
-                            z+=1
-                    if z>0:
-                        self.I.append(size+1)
-                        self.J.append(k)
-                        fnor_add.append(np.mean(self.fnor))
-                        ftan_add.append(np.mean(self.ftan))
-                        fullmobi_add.append(1)
-                        nx_add.append(0)
-                        ny_add.append(1)
-                if abs(self.x[k]-left)<threshold:
-                  z=0
-                  for i in range(len(self.I)):
-                      if self.I[i]==k or self.J[i]==k:
-                          z+=1
-                  if z>0:
-                      self.I.append(size+2)
-                      self.J.append(k)
-                      fnor_add.append(np.mean(self.fnor))
-                      ftan_add.append(np.mean(self.ftan))
-                      fullmobi_add.append(1)
-                      nx_add.append(1)
-                      ny_add.append(0)
-                if abs(self.x[k]-right)<threshold:
-                  z=0
-                  for i in range(len(self.I)):
-                      if self.I[i]==k or self.J[i]==k:
-                          z+=1
-                  if z>0:
-                      self.I.append(size+3)
-                      self.J.append(k)
-                      fnor_add.append(np.mean(self.fnor))
-                      ftan_add.append(np.mean(self.ftan))
-                      fullmobi_add.append(1)
-                      nx_add.append(-1)
-                      ny_add.append(0)
-
-            self.x_new=np.zeros(size+4)
-            self.y_new=np.zeros(size+4)
-            self.rad_new=np.zeros(size+4)
-
-            self.x_new[0:size]=self.x
-            self.x_new[size:]=Boundaries[:,0]
-            self.y_new[0:size]=self.y
-            self.y_new[size:]=Boundaries[:,1]
-            self.rad_new[0:size]=self.rad
-            self.rad_new[size:]=Boundaries[:,2]
-
-            del self.x
-            del self.y
-            del self.rad
-
-            self.x=self.x_new
-            self.y=self.y_new
-            self.rad=self.rad_new
-            self.N+=4
-
-            self.Lx=np.amax(self.x)-np.amin(self.x)
-            self.Ly=np.amax(self.y)-np.amin(self.y)
-
-            self.ncon=len(self.I)
-            self.fnor=np.asarray(fnor_add)
-            self.ftan=np.asarray(ftan_add)
-            self.fullmobi=np.asarray(fullmobi_add)
-            self.nx=np.asarray(nx_add)
-            self.ny=np.asarray(ny_add)
-
-        def AddNextBoundaryContacts(self):
-            size=len(self.xnext)
-            up=max(self.ynext)
-            down=min(self.ynext)
-            left=min(self.xnext)
-            right=max(self.xnext)
-            Boundaries=np.zeros((4,3))
-            Boundaries[0,:]=[(left+right)*0.5,up+50.0,20.0]
-            Boundaries[1,:]=[(left+right)*0.5,down-50.0,20.0]
-            Boundaries[2,:]=[left-50.0,(up+down)*0.5,20.0]
-            Boundaries[3,:]=[right+50.0,(up+down)*0.5,20.0]
-
-            self.x_new=np.zeros(size+4)
-            self.y_new=np.zeros(size+4)
-            self.rad_new=np.zeros(size+4)
-
-            self.x_new[0:size]=self.xnext
-            self.x_new[size:]=Boundaries[:,0]
-            self.y_new[0:size]=self.ynext
-            self.y_new[size:]=Boundaries[:,1]
-            self.rad_new[0:size]=self.radnext
-            self.rad_new[size:]=Boundaries[:,2]
-
-            del self.xnext
-            del self.ynext
-            del self.radnext
-
-            self.xnext=self.x_new
-            self.ynext=self.y_new
-            self.radnext=self.rad_new
-            self.Nnext+=4
-
-            self.Lxnext=np.amax(self.xnext)-np.amin(self.xnext)
-            self.Lynext=np.amax(self.ynext)-np.amin(self.ynext)
-            self.dx=self.xnext-self.x
-            self.dy=self.ynext-self.y
