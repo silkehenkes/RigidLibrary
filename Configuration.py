@@ -351,12 +351,14 @@ class Configuration:
                         ny0=0
                     # compute force on this contact by force balance
                     # two minus signs on second part cancel out
-                    ftotx=np.sum(self.fnor[neii]*self.nx[neii]-self.ftan[neii]*self.ny[neii])+np.sum(self.fnor[neij]*self.nx[neij]-self.ftan[neij]*self.ny[neij])
-                    ftoty=np.sum(self.fnor[neii]*self.ny[neii]+self.ftan[neii]*self.nx[neii])+np.sum(self.fnor[neij]*self.ny[neij]+self.ftan[neij]*self.nx[neij])
-                    # -(fx*nx+fy*ny)
-                    fnor0=-ftotx*nx0-ftoty*ny0
-                    # - (fx*(-ny)+fy*nx)
-                    ftan0=-ftotx*(-ny0)-ftoty*nx0
+                    ftotx=np.sum(self.fnor[neii]*self.nx[neii]-self.ftan[neii]*self.ny[neii])-np.sum(self.fnor[neij]*self.nx[neij]-self.ftan[neij]*self.ny[neij])
+                    ftoty=np.sum(self.fnor[neii]*self.ny[neii]+self.ftan[neii]*self.nx[neii])-np.sum(self.fnor[neij]*self.ny[neij]+self.ftan[neij]*self.nx[neij])
+                    # (fx*nx+fy*ny)
+                    fnor0=ftotx*nx0+ftoty*ny0
+                    print fnor0
+                    # (fx*(-ny)+fy*nx)
+                    ftan0=ftotx*(-ny0)+ftoty*nx0
+                    #print ftan0
                     if (abs(ftan0)/fnor0>self.mu):
                         fullmobi_add.append(1)
                     else:
