@@ -21,7 +21,8 @@ mu=0.3
 # More information about data set
 directions=['forward']
 experiment_nums=['23']
-inilabel=5384
+#inilabel=5384
+inilabel=5408
 dlabel=2
 #nsteps=12
 nsteps=2
@@ -91,7 +92,8 @@ for experiment in experiment_nums:
                         
                         ##### a couple of checks on the modes (optional)
                         #plotModes(self,usepts):
-                        #ThisHessian.plotModes([0,1,2,3,4,5])
+                        #usepts=[3*ThisConf.N-5,3*ThisConf.N-4,3*ThisConf.N-3,3*ThisConf.N-2,3*ThisConf.N-1]
+                        #ThisHessian.plotModes(usepts)
                         #plotZeroModes(self,thresh=2e-8,simple=True):
                         ThisHessian.plotZeroModes()
                         

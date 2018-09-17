@@ -520,8 +520,8 @@ class Analysis:
                 elif self.conf.datatype=='experiment':
                         xmin=np.amin(self.conf.x)-20
                         ymin=np.amin(self.conf.y)-20
-                        axval.set_xlim(xmin,xmin+self.Lx+40)
-                        axval.set_ylim(ymin,ymin+self.Ly+40)
+                        axval.set_xlim(xmin,xmin+self.Lx+120)
+                        axval.set_ylim(ymin,ymin+self.Ly+120)
                 return fig
 		
         # ========== Correlation between pebble rigidity and modes, with optional plot ========= 
@@ -562,8 +562,8 @@ class Analysis:
                         elif self.conf.datatype=='experiment':
                                 xmin=np.amin(self.conf.x)-20
                                 ymin=np.amin(self.conf.y)-20
-                                axval.set_xlim(xmin,xmin+self.Lx+40)
-                                axval.set_ylim(ymin,ymin+self.Ly+40)
+                                axval.set_xlim(xmin,xmin+self.Lx+120)
+                                axval.set_ylim(ymin,ymin+self.Ly+120)
                         plt.title('Relative lack of motion from zero modes')
                 # Conditional probabilities: Eigenvalue rigid when pebble rigid
                 if Corr_PGDM[0]>0:
@@ -630,8 +630,8 @@ class Analysis:
                         elif self.conf.datatype=='experiment':
                                 xmin=np.amin(self.conf.x)-20
                                 ymin=np.amin(self.conf.y)-20
-                                axval.set_xlim(xmin,xmin+self.Lx+40)
-                                axval.set_ylim(ymin,ymin+self.Ly+40)
+                                axval.set_xlim(xmin,xmin+self.Lx+120)
+                                axval.set_ylim(ymin,ymin+self.Ly+120)
                         plt.title('Actual relative lack of motion')
                 # Conditional probabilities: Eigenvalue rigid when pebble rigid
                 if Corr_PGDM[0]>0:
@@ -704,8 +704,8 @@ class Analysis:
                 elif self.conf.datatype=='experiment':
                         xmin=np.amin(self.conf.x)-20
                         ymin=np.amin(self.conf.y)-20
-                        axval.set_xlim(xmin,xmin+self.Lx+40)
-                        axval.set_ylim(ymin,ymin+self.Ly+40)
+                        axval.set_xlim(xmin,xmin+self.Lx+120)
+                        axval.set_ylim(ymin,ymin+self.Ly+120)
 		#plt.colorbar(cpick,label="deformation field")
 		plt.title(' D2 (log-scale)')
 		return fig

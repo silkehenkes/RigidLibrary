@@ -25,6 +25,12 @@ class Configuration:
                 # Simulation data has periodic boundary conditions and also angles as output
                 self.periodic=True
                 self.hasAngles=True
+                # basis for mass computations
+                self.mass = 1.0
+                # Young's modulus 
+                self.young = 1.0
+                # radius conversion factor
+                self.rconversion = 1.0
             elif (datatype=='experiment'):
                 print "Reading experimental data!"
                 self.prefix1=prefix10
@@ -33,6 +39,14 @@ class Configuration:
                 # Experimental data does not have periodic boundary conditions and there is no angle data either
                 self.periodic=False
                 self.hasAngles=False
+                # average mass of particle in grams (before scaling)
+                self.mass =1.0
+                # Young's modulus (1 GPa) in g / (cm s^2)
+                #self.young = 1e7
+                # using 1, since units are bogus here anyways
+                self.young = 1.0
+                # radius conversion factor from pixel to cm. Particle diameter is now 1 (cm)
+                self.rconversion = 0.02
             else:
                 print "Error: Unknown type of data! Doing nothing."
 
@@ -296,7 +310,6 @@ class Configuration:
             xleft=left-self.rad[leftidx]
             right=self.x[rightidx]
             xright=right+self.rad[rightidx]
-            print yup,ydown,xleft,xright
             
             # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
             Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
@@ -321,8 +334,6 @@ class Configuration:
             pright = np.nonzero(np.abs(self.x+self.rad-xright)<threshold)[0]
             padd.extend(pright)
             labels.extend([3 for k in range(len(pright))])
-            print padd
-            print labels
             
             fullmobi_add=[]
             fnor_add=[]
@@ -355,7 +366,6 @@ class Configuration:
                     ftoty=np.sum(self.fnor[neii]*self.ny[neii]+self.ftan[neii]*self.nx[neii])-np.sum(self.fnor[neij]*self.ny[neij]+self.ftan[neij]*self.nx[neij])
                     # (fx*nx+fy*ny)
                     fnor0=ftotx*nx0+ftoty*ny0
-                    print fnor0
                     # (fx*(-ny)+fy*nx)
                     ftan0=ftotx*(-ny0)+ftoty*nx0
                     #print ftan0
@@ -378,7 +388,7 @@ class Configuration:
             self.ny=np.concatenate((self.ny,np.array(ny_add)))
             self.ncon=len(self.I)
             self.N+=4
-            print self.ncon
+            print "Added boundaries!"
                     
           
 
@@ -470,6 +480,12 @@ class Configuration:
         def getD2min(self,threshold_rad):
                 D2_min=np.zeros(len(self.x))
                 for k in range(len(self.x)):
+                    # Boundary is dubious
+                    # the 10^5 is bad, but then they tend to be that value for experiment
+                    # just a way to get the color scale to not f up
+                    if (k in self.bindices):
+                        D2_min[k]=1e5
+                    else:
                         temp=[]
                         dist2=(self.x-self.x[k])**2+(self.y-self.y[k])**2
                         rad2=(self.rad[k]+np.mean(self.rad)+threshold_rad)**2
@@ -507,6 +523,7 @@ class Configuration:
                                         dx=self.x[neighbor]-self.x[k]
                                         dy=self.y[neighbor]-self.y[k]
                                         D2_min[k]+=((dx_next- (epsilon[0,0]*dx+epsilon[0,1]*dy))**2+ (dy_next-(epsilon[1,0]*dx+epsilon[1,1]*dy))**2)
+                        
                                                                     
                 return D2_min
                 
