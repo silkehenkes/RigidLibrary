@@ -45,20 +45,23 @@ class Hessian:
 		favy=0
 		frotav=0
 		mrad=np.mean(self.conf.rad)
+		mscale=self.conf.density*self.conf.height*np.pi*(self.conf.rconversion*mrad)**2
+		self.eigscale=self.conf.stiffness/mscale
+		print "Estimating eigenvalue scale at " + str(self.eigscale) + " kg/s^2"
 		# Careful now: We are only single-counting contacts these days
 		for k in range(self.ncon):
 			i=self.conf.I[k]
 			j=self.conf.J[k]
 			# particle masses
-			mi = self.conf.mass*(self.conf.rconversion*self.conf.rad[i])**2
-			mj = self.conf.mass*(self.conf.rconversion*self.conf.rad[j])**2
+			mi = self.conf.density*self.conf.height*np.pi*(self.conf.rconversion*self.conf.rad[i])**2
+			mj = self.conf.density*self.conf.height*np.pi*(self.conf.rconversion*self.conf.rad[j])**2
 			Ai = 1.0/2**0.5
 			Aj = 1.0/2**0.5
 			# The boundary particle is always i, per construction (see configuration)
 			# see notes for detailed scaling 
 			if self.conf.addBoundary:
                             if (i in self.conf.bindices):
-                                mi = self.conf.rconversion*0.5*(self.conf.Lx+self.conf.Ly)
+                                mi = self.conf.density*self.conf.height*self.conf.width*self.conf.rconversion*0.5*(self.conf.Lx+self.conf.Ly)
                                 Ai = (12.0*mrad**2/((0.5*(self.conf.Lx+self.conf.Ly))**2+(2*mrad)**2))**0.5
                             
 			nx0=self.conf.nx[k]
@@ -73,7 +76,7 @@ class Hessian:
 
                         # Simulation default repulsion constant
                         # Never make experiment recompute forces
-			kn=1.0
+			kn=self.conf.stiffness
 			# get the r betwen particles
 			dx=self.conf.x[j]-self.conf.x[i]
 			if self.conf.periodic:
@@ -86,7 +89,7 @@ class Hessian:
                             if self.conf.datatype=='experiment':
                                 print "Warning: recomputing normal forces for the experiment. This is a bad idea!"
 			    # that's just overlap delta
-			    fn = kn*(self.conf.rad[i]+self.conf.rad[j]-rval)
+			    fn = kn*(self.conf.rad[i]+self.conf.rad[j]-rval)*self.conf.rconversion
 			    if fn<0:
 			        print "Funny contact with negative overlap between " + str(i)+ " and " + str(j)
                                 fn=0.0
@@ -94,7 +97,7 @@ class Hessian:
 			    fn=self.conf.fnor[k]
 			if frictional:
 			    if self.conf.fullmobi[k]==0:
-			        kt=1.0
+			        kt=self.conf.stiffness
 			    else:
 			        kt=0.0
 			else:
@@ -126,7 +129,7 @@ class Hessian:
 
 			# And put it into the Hessian, with correct elasticity prefactor
 			# once for contact ij
-			self.Hessian[3*i:(3*i+3),3*j:(3*j+3)]=Hij*self.conf.young/(mi*mj)**0.5
+			self.Hessian[3*i:(3*i+3),3*j:(3*j+3)]=Hij/(mi*mj)**0.5
 			
 			# see notes for the flip one corresponding to contact ji
 			# both n and t flip signs. Put in here explicitly. Essentially, angle cross-terms flip sign
@@ -147,13 +150,13 @@ class Hessian:
 
 			# And put it into the Hessian
 			# now for contact ji
-			self.Hessian[3*j:(3*j+3),3*i:(3*i+3)]=Hji*self.conf.young/(mi*mj)**0.5
+			self.Hessian[3*j:(3*j+3),3*i:(3*i+3)]=Hji/(mi*mj)**0.5
 			
 			
 			# Careful, the diagonal bits are not just minus because of the rotations
 			diagsquare=np.zeros((3,3))
 			diagsquare[0,0]=kn
-			diagsquare[1,1]=-fn/rval+kt
+			diagsquare[1,1]=-fn/(self.conf.rconversion*rval)+kt
 			diagsquare[1,2]=kt*Ai
 			diagsquare[2,1]=kt*Ai
 			diagsquare[2,2]=kt*Ai**2
@@ -171,13 +174,13 @@ class Hessian:
 			Hijdiag[2,2]=diagsquare[2,2]
 			
 			# And then *add* it to the diagnual
-			self.Hessian[3*i:(3*i+3),3*i:(3*i+3)]+=Hijdiag*self.conf.young/mi
+			self.Hessian[3*i:(3*i+3),3*i:(3*i+3)]+=Hijdiag/mi
 			
 			#And once more for the jj contribution, which is the same whizz with the flipped sign of n and t 
 			# and adjusted A's
 			diagsquare=np.zeros((3,3))
 			diagsquare[0,0]=kn
-			diagsquare[1,1]=-fn/rval+kt
+			diagsquare[1,1]=-fn/(self.conf.rconversion*rval)+kt
 			diagsquare[1,2]=kt*Aj
 			diagsquare[2,1]=kt*Aj
 			diagsquare[2,2]=kt*Aj**2
@@ -194,12 +197,12 @@ class Hessian:
 			Hjidiag[2,2]=diagsquare[2,2]
 			
 			# And then *add* it to the diagnual
-			self.Hessian[3*j:(3*j+3),3*j:(3*j+3)]+=Hjidiag*self.conf.young/mj
+			self.Hessian[3*j:(3*j+3),3*j:(3*j+3)]+=Hjidiag/mj
 			
 
 
-                # add a very small, diagonal bit to stabilise zero modes
-                self.Hessian[range(3*self.N),range(3*self.N)]+=stabilise*self.conf.young
+                # add a very small, diagonal bit to stabilise zero modes. Normalise by standard units
+                self.Hessian[range(3*self.N),range(3*self.N)]+=stabilise*self.eigscale
                 favx/=self.ncon
                 favy/=self.ncon
                 frotav/=self.ncon
@@ -251,7 +254,7 @@ class Hessian:
 			eigx=np.zeros((self.N,))
 			eigy=np.zeros((self.N,))
 			for u in range(3*self.N):
-				if self.eigval[u]<thresh:
+				if self.eigval[u]<thresh*self.eigscale:
 					nzero+=1
 					eigx+=self.eigvec[0:3*self.N:3,u]
 					eigy+=self.eigvec[1:3*self.N:3,u]
@@ -271,7 +274,7 @@ class Hessian:
                                 plt.ylim(ymin,ymin+self.conf.Ly+40)
 		else:
 			for u in range(3*self.N):
-				if self.eigval[u]<thresh:
+				if self.eigval[u]<thresh*self.eigscale:
 					plt.figure()
 					plt.quiver(self.x,self.y,self.eigvec[0:3*self.N:3,u],self.eigvec[1:3*self.N:3,u])
 					# dimensional contributions
@@ -291,7 +294,7 @@ class Hessian:
 		eigr=np.zeros((self.N,))
 		self.iszero=[]
 		for u in range(3*self.N):
-			if self.eigval[u]<thresh*self.conf.young:
+			if self.eigval[u]<thresh*self.eigscale:
 				self.iszero.append(u)
 				self.nzero+=1
 				eigx+=self.eigvec[0:3*self.N:3,u]**2
@@ -300,7 +303,7 @@ class Hessian:
 		eigx/=self.nzero
 		eigy/=self.nzero
 		eigr/=self.nzero
-		self.isrigid=[index for index,value in enumerate(eigx+eigy+eigr) if value<thresh*self.conf.young]
+		self.isrigid=[index for index,value in enumerate(eigx+eigy+eigr) if value<thresh*self.eigscale]
 		self.notrigid=[x for x in range(self.N) if x not in self.isrigid]
 		
          

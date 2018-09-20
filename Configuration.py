@@ -26,11 +26,13 @@ class Configuration:
                 self.periodic=True
                 self.hasAngles=True
                 # basis for mass computations
-                self.mass = 1.0
-                # Young's modulus 
-                self.young = 1.0
+                self.density = 1.0
+                # Prefactor of the stiffness coefficients
+                self.stiffness = 1.0
                 # radius conversion factor
                 self.rconversion = 1.0
+                self.height=1.0
+                self.width=1.0
             elif (datatype=='experiment'):
                 print "Reading experimental data!"
                 self.prefix1=prefix10
@@ -39,14 +41,16 @@ class Configuration:
                 # Experimental data does not have periodic boundary conditions and there is no angle data either
                 self.periodic=False
                 self.hasAngles=False
-                # average mass of particle in grams (before scaling)
-                self.mass =1.0
-                # Young's modulus (1 GPa) in g / (cm s^2)
-                #self.young = 1e7
-                # using 1, since units are bogus here anyways
-                self.young = 1.0
-                # radius conversion factor from pixel to cm. Particle diameter is now 1 (cm)
-                self.rconversion = 0.02
+                # density of the material in kg/m^3
+                self.density =1060.0
+                # Prefactor of the stiffness coefficient, k_n = \frac{\pi}{6} E h = 6490 kg /s^2
+                self.stiffness = 6490.0
+                # radius conversion factor from pixel to m. 
+                self.rconversion = 2.7e-4
+                # height of the disks in m
+                self.height=3.1e-3
+                # boundary width
+                self.width=20e-3
             else:
                 print "Error: Unknown type of data! Doing nothing."
 
@@ -259,6 +263,7 @@ class Configuration:
                         rij=np.sqrt((x1-x2)**2+(y1-y2)**2)
                         self.nx[k]=(x2-x1)/rij
                         self.ny[k]=(y2-y1)/rij
+                        
                 return 0
                 
             

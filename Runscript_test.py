@@ -1,6 +1,7 @@
 import random
 import sys, os, glob
 
+
 # Location of the library files: insert into python path
 pebblepath='/home/sh18581/Documents/Friction/RigidLibrary/'
 sys.path.insert(1,pebblepath)
@@ -53,6 +54,7 @@ for experiment in experiment_nums:
                         numlabel2 =  "%05d" %(numlabel0+dlabel)
                         ThisConf.ReadExpdataNext(numlabel2)
                         ThisConf.AddNextBoundaryContacts()
+                        
                        
                         ########## Setting up and playing the pebble game
                         # def __init__(self,conf, game10,game20,modifier='nothing',verbose0=False):
