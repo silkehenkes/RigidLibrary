@@ -334,6 +334,10 @@ class Analysis:
 	
 	# ============== Cluster statistics ===================
 	def clusterStatistics(self):
+		lenx=0
+		leny=0
+		frac=0
+		fracmax=0
 		# Cluster statistics, contact and particle based
 		# Total contacts, fraction part of cluster
 		incluster=[val for val in self.pebbles.cluster if val>-1]
@@ -528,6 +532,8 @@ class Analysis:
         def RigidModesCorrelate(self,thresh,plotDisp=True):
 		# Correlations
 		Corr_PGDM=np.zeros(4)
+		P_eig_if_pebble=0
+		P_pebble_if_eig=0
 		# Compute correlations between being part of a rigid cluster and contact displacements
 		eign, eigt, eigr, eiggear = self.hessian.ModeContacts()
 		for k in range(self.ncon):
@@ -583,6 +589,8 @@ class Analysis:
         def RigidDisplacementsCorrelate(self,minThresh,plotDisp=True):
 		# Correlations
 		Corr_PGDM=np.zeros(4)
+		P_disp_if_pebble=0
+		P_pebble_if_disp=0
 		# Compute correlations between being part of a rigid cluster and contact displacements
 		if self.conf.hasAngles:
                     disp2n, disp2t, disp2r, disp2gear,intThresh = self.conf.Disp2Contacts(minThresh,True)

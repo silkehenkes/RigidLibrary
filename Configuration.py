@@ -9,7 +9,7 @@
 
 import sys, os, glob
 import numpy as np
-
+import random
 
 class Configuration:
         
@@ -98,16 +98,16 @@ class Configuration:
                 filename=foldername + '/PosVel' + str(snap) + '.dat'
                 if (self.verbose):
                         print(filename)
-                isPosdata=False
+                self.isPosdata=False
                 # Only if: 1) The file exists 2) is not empty 
                 try:
                         data=np.loadtxt(filename)
                         if (len(data.shape)>1):
-                                isPosdata=True	
+                                self.isPosdata=True	
                 except:
-                        isPosdata=False
+                        self.isPosdata=False
                         
-                if (not isPosdata):
+                if (not self.isPosdata):
                         print('error: no position data at snapshot' + str(snap))
                         self.x=0.0
                         self.y=0.0
@@ -127,15 +127,15 @@ class Configuration:
                 filename=foldername + '/Contact' + str(snap) + '.dat'
                 if (self.verbose):
                         print(filename)
-                isCondata=False
+                self.isCondata=False
                 # Only if: 1) The file exists 2) is not empty 3) is longer than 1 contact (garbage avoiding device .. hope for the best. Some of these got cut off mid-writing)
                 try:
                         data=np.loadtxt(filename)
                         if (len(data.shape)>1):
-                                isCondata=True	
+                                self.isCondata=True	
                 except:
-                        isCondata=False
-                if ((not isCondata) or (not isPosdata)):
+                        self.isCondata=False
+                if ((not self.isCondata) or (not self.isPosdata)):
                         print('error: no position data at snapshot' + str(snap))
                         self.noConf=True
                         self.I=-1
@@ -163,7 +163,7 @@ class Configuration:
                 prefix = self.prefix1 + numlabel + self.prefix2
                 print "Starting analysis of experimental step " + prefix
                 # Let's get the positions first
-                isPosdata=True
+                self.isPosdata=True
                 print self.folder+prefix + 'ParticleData.dlm'
                 try:
                     coords=np.loadtxt(self.folder+prefix + 'ParticleData.dlm',delimiter=',')
@@ -175,7 +175,7 @@ class Configuration:
                     self.Ly=np.amax(self.y)-np.amin(self.y)
                     del coords
                 except:
-                    isPosdata=False
+                    self.isPosdata=False
                     self.x=0
                     self.y=0
                     self.rad=1 # purely so that we can divide by it ...
@@ -184,17 +184,17 @@ class Configuration:
                 
                 # The contact data lives in the adjacency matrices
                 # As non-sparse N by N matrices (!)
-                isCondata=True
+                self.isCondata=True
                 try:
                     contacts=np.loadtxt(self.folder+prefix+'BinaryAdjacencyMatrix.dlm',delimiter=',')
                     fnor0=np.loadtxt(self.folder+prefix+'NormWeightedAdjacencyMatrix.dlm',delimiter=',')
                     ftan0=np.loadtxt(self.folder+prefix+'TanWeightedAdjacencyMatrix.dlm',delimiter=',')
                 except:
-                    isCondata=False
+                    self.isCondata=False
                     print "Error: there is no contact data here"
                     return 1
                     
-                if isCondata:
+                if self.isCondata:
                     self.I=[]
                     self.J=[]
                     fn0=[]
@@ -243,6 +243,7 @@ class Configuration:
                     del contacts
                     del fnor0
                     del ftan0
+                    self.N_NoRattler=len(list(set(self.I+self.J)))
                 else:
                     self.I=-1
                     self.J=-1
@@ -275,7 +276,7 @@ class Configuration:
                 prefix = self.prefix1 + numlabel + self.prefix2
                 print "Reading experimental step " + prefix + " as next data set."
                 # Let's get the positions first
-                isPosdata=True
+                self.isPosdataNext=True
                 try:
                     coords=np.loadtxt(self.folder+prefix + 'ParticleData.dlm',delimiter=',')
                     self.xnext=coords[:,1]
@@ -285,16 +286,17 @@ class Configuration:
                     self.Lxnext=np.amax(self.x)-np.amin(self.x)
                     self.Lynext=np.amax(self.y)-np.amin(self.y)
                     del coords
+                    # Slight overkill, but then this enforces unified syntax with simulation, making our job below easier
+                    if len(self.xnext)==len(self.x):
+                        self.dx=self.xnext-self.x
+                        self.dy=self.ynext-self.y
                 except:
-                    isPosdata=False
+                    self.isPosdataNext=False
                     self.xnext=0
                     self.ynext=0
                     self.radnext=1 # purely so that we can divide by it ...
                     self.Nnext=0
-                # Slight overkill, but then this enforces unified syntax with simulation, making our job below easier
-                if len(self.xnext)==len(self.x):
-                    self.dx=self.xnext-self.x
-                    self.dy=self.ynext-self.y
+                
          
         #### ======================== Boundary integration =======================================================
         def AddBoundaryContacts(self,threshold=20,Brad=20.0):
@@ -307,97 +309,104 @@ class Configuration:
             
             # Boundary posiitons:
             # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
-            up=self.y[upidx]
-            yup = up+self.rad[upidx]
-            down=self.y[downidx]
-            ydown = down-self.rad[downidx]
-            left=self.x[leftidx]
-            xleft=left-self.rad[leftidx]
-            right=self.x[rightidx]
-            xright=right+self.rad[rightidx]
-            
-            # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
-            Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
-            Boundaries[0,:]=[(left+right)*0.5,yup+Brad,Brad]
-            Boundaries[1,:]=[(left+right)*0.5,ydown-Brad,Brad]
-            Boundaries[2,:]=[xleft-Brad,(up+down)*0.5,Brad]
-            Boundaries[3,:]=[xright+Brad,(up+down)*0.5,Brad]
-            
-            # Find the particles in contact with the boundary, and label correctly
-            self.bindices=[self.N,self.N+1,self.N+2,self.N+3]
-            padd=[]
-            labels=[]
-            pup =  np.nonzero(np.abs(self.y+self.rad-yup)<threshold)[0]
-            padd.extend(pup)
-            labels.extend([0 for k in range(len(pup))])
-            pdown =  np.nonzero(np.abs(self.y-self.rad-ydown)<threshold)[0]
-            padd.extend(pdown)
-            labels.extend([1 for k in range(len(pdown))])
-            pleft = np.nonzero(np.abs(self.x-self.rad-xleft)<threshold)[0]
-            padd.extend(pleft)
-            labels.extend([2 for k in range(len(pleft))])
-            pright = np.nonzero(np.abs(self.x+self.rad-xright)<threshold)[0]
-            padd.extend(pright)
-            labels.extend([3 for k in range(len(pright))])
-            
-            fullmobi_add=[]
-            fnor_add=[]
-            ftan_add=[]
-            nx_add=[]
-            ny_add=[]
-            for k in range(len(padd)):
-                # does this guy have neighbours?
-                neii=np.nonzero(self.I[:self.ncon]==padd[k])[0]
-                neij=np.nonzero(self.J[:self.ncon]==padd[k])[0]
-                # if yes add the boundary contacts
-                if (len(neii)>0 or len(neij)>0):
-                    self.I.append(self.bindices[labels[k]])
-                    self.J.append(padd[k])
-                    if (labels[k])==0:
-                        nx0=0
-                        ny0=-1
-                    elif (labels[k]==1):
-                        nx0=0
-                        ny0=1
-                    elif (labels[k]==2):
-                        nx0=1
-                        ny0=0
-                    else:
-                        nx0=-1
-                        ny0=0
-                    # compute force on this contact by force balance
-                    # two minus signs on second part cancel out
-                    ftotx=np.sum(self.fnor[neii]*self.nx[neii]-self.ftan[neii]*self.ny[neii])-np.sum(self.fnor[neij]*self.nx[neij]-self.ftan[neij]*self.ny[neij])
-                    ftoty=np.sum(self.fnor[neii]*self.ny[neii]+self.ftan[neii]*self.nx[neii])-np.sum(self.fnor[neij]*self.ny[neij]+self.ftan[neij]*self.nx[neij])
-                    # (fx*nx+fy*ny)
-                    fnor0=ftotx*nx0+ftoty*ny0
-                    # (fx*(-ny)+fy*nx)
-                    ftan0=ftotx*(-ny0)+ftoty*nx0
-                    #print ftan0
-                    if (abs(ftan0)/fnor0>self.mu):
-                        fullmobi_add.append(1)
-                    else:
-                        fullmobi_add.append(0)
-                    fnor_add.append(fnor0)
-                    ftan_add.append(ftan0)
-                    nx_add.append(nx0)
-                    ny_add.append(ny0)
-            # Finally stick it at the end of the existing data
-            self.x=np.concatenate((self.x,Boundaries[:,0]))
-            self.y=np.concatenate((self.y,Boundaries[:,1]))
-            self.rad=np.concatenate((self.rad,Boundaries[:,2]))
-            self.fnor=np.concatenate((self.fnor,np.array(fnor_add)))
-            self.ftan=np.concatenate((self.ftan,np.array(ftan_add)))
-            self.fullmobi=np.concatenate((self.fullmobi,np.array(fullmobi_add)))
-            self.nx=np.concatenate((self.nx,np.array(nx_add)))
-            self.ny=np.concatenate((self.ny,np.array(ny_add)))
-            self.ncon=len(self.I)
-            self.N+=4
-            print "Added boundaries!"
-                    
+            try:
+                up=self.y[upidx]
+                yup = up+self.rad[upidx]
+                down=self.y[downidx]
+                ydown = down-self.rad[downidx]
+                left=self.x[leftidx]
+                xleft=left-self.rad[leftidx]
+                right=self.x[rightidx]
+                xright=right+self.rad[rightidx]
+            except:
+                self.addBoundary=False
+                print "No boundaries added!"
+                return 1
+
+            if self.addBoundary:            
+                # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+                Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
+                Boundaries[0,:]=[(left+right)*0.5,yup+Brad,Brad]
+                Boundaries[1,:]=[(left+right)*0.5,ydown-Brad,Brad]
+                Boundaries[2,:]=[xleft-Brad,(up+down)*0.5,Brad]
+                Boundaries[3,:]=[xright+Brad,(up+down)*0.5,Brad]
+                
+                # Find the particles in contact with the boundary, and label correctly
+                self.bindices=[self.N,self.N+1,self.N+2,self.N+3]
+                padd=[]
+                labels=[]
+                pup =  np.nonzero(np.abs(self.y+self.rad-yup)<threshold)[0]
+                padd.extend(pup)
+                labels.extend([0 for k in range(len(pup))])
+                pdown =  np.nonzero(np.abs(self.y-self.rad-ydown)<threshold)[0]
+                padd.extend(pdown)
+                labels.extend([1 for k in range(len(pdown))])
+                pleft = np.nonzero(np.abs(self.x-self.rad-xleft)<threshold)[0]
+                padd.extend(pleft)
+                labels.extend([2 for k in range(len(pleft))])
+                pright = np.nonzero(np.abs(self.x+self.rad-xright)<threshold)[0]
+                padd.extend(pright)
+                labels.extend([3 for k in range(len(pright))])
+                
+                fullmobi_add=[]
+                fnor_add=[]
+                ftan_add=[]
+                nx_add=[]
+                ny_add=[]
+                for k in range(len(padd)):
+                    # does this guy have neighbours?
+                    neii=np.nonzero(self.I[:self.ncon]==padd[k])[0]
+                    neij=np.nonzero(self.J[:self.ncon]==padd[k])[0]
+                    # if yes add the boundary contacts
+                    if (len(neii)>0 or len(neij)>0):
+                        self.I.append(self.bindices[labels[k]])
+                        self.J.append(padd[k])
+                        if (labels[k])==0:
+                            nx0=0
+                            ny0=-1
+                        elif (labels[k]==1):
+                            nx0=0
+                            ny0=1
+                        elif (labels[k]==2):
+                            nx0=1
+                            ny0=0
+                        else:
+                            nx0=-1
+                            ny0=0
+                        # compute force on this contact by force balance
+                        # two minus signs on second part cancel out
+                        ftotx=np.sum(self.fnor[neii]*self.nx[neii]-self.ftan[neii]*self.ny[neii])-np.sum(self.fnor[neij]*self.nx[neij]-self.ftan[neij]*self.ny[neij])
+                        ftoty=np.sum(self.fnor[neii]*self.ny[neii]+self.ftan[neii]*self.nx[neii])-np.sum(self.fnor[neij]*self.ny[neij]+self.ftan[neij]*self.nx[neij])
+                        # (fx*nx+fy*ny)
+                        fnor0=ftotx*nx0+ftoty*ny0
+                        # (fx*(-ny)+fy*nx)
+                        ftan0=ftotx*(-ny0)+ftoty*nx0
+                        #print ftan0
+                        if (abs(ftan0)/fnor0>self.mu):
+                            fullmobi_add.append(1)
+                        else:
+                            fullmobi_add.append(0)
+                        fnor_add.append(fnor0)
+                        ftan_add.append(ftan0)
+                        nx_add.append(nx0)
+                        ny_add.append(ny0)
+                # Finally stick it at the end of the existing data
+                self.x=np.concatenate((self.x,Boundaries[:,0]))
+                self.y=np.concatenate((self.y,Boundaries[:,1]))
+                self.rad=np.concatenate((self.rad,Boundaries[:,2]))
+                self.fnor=np.concatenate((self.fnor,np.array(fnor_add)))
+                self.ftan=np.concatenate((self.ftan,np.array(ftan_add)))
+                self.fullmobi=np.concatenate((self.fullmobi,np.array(fullmobi_add)))
+                self.nx=np.concatenate((self.nx,np.array(nx_add)))
+                self.ny=np.concatenate((self.ny,np.array(ny_add)))
+                self.ncon=len(self.I)
+                self.N+=4
+                print "Added boundaries!"
+                        
           
 
         def AddNextBoundaryContacts(self,threshold=15,Brad=20.0):
+            self.addBoundaryNext=True
             # Threshold to check if a particle is close enough to walls.
             upidx=np.argmax(self.ynext)
             downidx=np.argmin(self.ynext)
@@ -406,31 +415,97 @@ class Configuration:
             
             # Boundary posiitons:
             # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
-            up=self.ynext[upidx]
-            yup = up+Brad+self.radnext[upidx]
-            down=self.ynext[downidx]
-            ydown = down-Brad-self.radnext[downidx]
-            left=self.xnext[leftidx]
-            xleft=left-Brad-self.radnext[leftidx]
-            right=self.xnext[rightidx]
-            xright=right+Brad+self.radnext[rightidx]
+            try:
+                up=self.ynext[upidx]
+                yup = up+Brad+self.radnext[upidx]
+                down=self.ynext[downidx]
+                ydown = down-Brad-self.radnext[downidx]
+                left=self.xnext[leftidx]
+                xleft=left-Brad-self.radnext[leftidx]
+                right=self.xnext[rightidx]
+                xright=right+Brad+self.radnext[rightidx]
+            except:
+                self.addBoundaryNext=False
+                print "No boundaries for \"Next\" added!"
+                return 1
             
-            # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
-            Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
-            Boundaries[0,:]=[(left+right)*0.5,yup,Brad]
-            Boundaries[1,:]=[(left+right)*0.5,ydown,Brad]
-            Boundaries[2,:]=[xleft,(up+down)*0.5,Brad]
-            Boundaries[3,:]=[xright,(up+down)*0.5,Brad]
-            
-            
-            self.xnext=np.concatenate((self.xnext,Boundaries[:,0]))
-            self.ynext=np.concatenate((self.ynext,Boundaries[:,1]))
-            self.radnext=np.concatenate((self.radnext,Boundaries[:,2]))
+            if self.addBoundaryNext:
+                # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+                Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
+                Boundaries[0,:]=[(left+right)*0.5,yup,Brad]
+                Boundaries[1,:]=[(left+right)*0.5,ydown,Brad]
+                Boundaries[2,:]=[xleft,(up+down)*0.5,Brad]
+                Boundaries[3,:]=[xright,(up+down)*0.5,Brad]
+                
+                
+                self.xnext=np.concatenate((self.xnext,Boundaries[:,0]))
+                self.ynext=np.concatenate((self.ynext,Boundaries[:,1]))
+                self.radnext=np.concatenate((self.radnext,Boundaries[:,2]))
 
-            self.dx=self.xnext-self.x
-            self.dy=self.ynext-self.y
-            self.Nnext+=4
-        
+                self.dx=self.xnext-self.x
+                self.dy=self.ynext-self.y
+                self.Nnext+=4
+
+
+        ############  Kuang's AddSomeContacts
+        def AddSomeContacts(self,percentage):
+            ncon_add=int(0.01*percentage*self.ncon)
+            fullmobi_add=np.zeros(ncon_add)
+            nx_add=np.zeros(ncon_add)
+            ny_add=np.zeros(ncon_add)
+            fnor_add=np.ones(ncon_add)*np.mean(self.fnor)
+            ftan_add=np.zeros(ncon_add)
+            fraction_double_bonds=float(np.sum(self.fullmobi==0)/self.ncon)
+            Num_add_d_bonds=int(fraction_double_bonds*ncon_add)
+
+            I_base=[]
+            J_base=[]
+            for i in range(self.N-1):
+                for j in range(i+1,self.N):
+                    if abs(self.x[i]-self.x[j])<=(self.rad[i]+self.rad[j]) and abs(self.y[i]-self.y[j])<=(self.rad[i]+self.rad[j]):
+                        for k in range(len(self.I)):
+                            if self.I[k]==i and self.J[k]==j:
+                                break
+                            else:
+                                if self.I[k]==j and self.J[k]==i:
+                                    break
+                                else:
+                                    I_base.append(i)
+                                    J_base.append(j)
+                                    break
+
+            for k in range(len(I_base)):
+                temp=random.randint(k,len(I_base)-1)
+                I_base[temp]+=I_base[k]
+                I_base[k]=I_base[temp]-I_base[k]
+                I_base[temp]-=I_base[k]
+                J_base[temp]+=J_base[k]
+                J_base[k]=J_base[temp]-J_base[k]
+                J_base[temp]-=J_base[k]
+            #print I_base
+            for i in range(int(ncon_add)):
+                self.I.append(I_base[i])
+                self.J.append(J_base[i])
+                x1=self.x[I_base[i]]
+                y1=self.y[I_base[i]]
+                x2=self.x[J_base[i]]
+                y2=self.y[J_base[i]]
+                rij=np.sqrt((x1-x2)**2+(y1-y2)**2)
+                nx_add[i]=(x2-x1)/rij
+                ny_add[i]=(y2-y1)/rij
+                if i>=Num_add_d_bonds :
+                    fullmobi_add[i]=1
+            self.ncon+=ncon_add
+            self.fullmobi=np.concatenate((self.fullmobi,fullmobi_add))
+            self.nx=np.concatenate((self.nx,np.array(nx_add)))
+            self.ny=np.concatenate((self.ny,np.array(ny_add)))
+            self.fnor=np.concatenate((self.fnor,np.array(fnor_add)))
+            self.ftan=np.concatenate((self.ftan,np.array(ftan_add)))
+            print "Added " + str(percentage)+ "% more bonds!"
+
+            ################conf.ncon, conf.fnor, conf.ftan, conf.fullmobi need to be updated.
+
+
         #### ======================== Analysis helper functions	 =================================================
         
         # computes basic contact, force, torque, and stress statistics
