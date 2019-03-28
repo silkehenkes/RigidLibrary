@@ -10,6 +10,7 @@
 import sys, os, glob
 import numpy as np
 import random
+from scipy.optimize import fmin
 
 class Configuration:
         
@@ -559,52 +560,45 @@ class Configuration:
         #### =================== Computes the D2_min, amount of non-affine motion around a particle ==============
         def getD2min(self,threshold_rad):
                 D2_min=np.zeros(len(self.x))
+                C1=0.0
+                C2=0.0
+                C3=0.0
+                C4=0.0
+                C5=0.0
+                C6=0.0
+                C7=0.0
+                C8=0.0
+                def nested_f(x):
+                    return C1*(x[0]**2+x[2]**2)+C2*(x[1]**2+x[3]**2)+C3*(x[0]*x[1]+x[2]*x[3])+C4*x[0]+C5*x[1]+C6*x[2]+C7*x[3]+C8
                 for k in range(len(self.x)):
-                    # Boundary is dubious
-                    # the 10^5 is bad, but then they tend to be that value for experiment
-                    # just a way to get the color scale to not f up
-                    if (k in self.bindices):
-                        D2_min[k]=1e5
-                    else:
-                        temp=[]
-                        dist2=(self.x-self.x[k])**2+(self.y-self.y[k])**2
-                        rad2=(self.rad[k]+np.mean(self.rad)+threshold_rad)**2
-                        # yes, that includes myself, but that term drops out
-                        temp=np.nonzero(dist2<rad2)
-                        #for i in range(len(self.x)):
-                                #if np.sqrt((self.x[k]-self.x[i])**2+(self.y[k]-self.y[i])**2)<(self.rad[k]+threshold_rad):
-                                        #temp.append(i)
-                        X=np.zeros((2,2))
-                        Y=np.zeros((2,2))
-                        epsilon=np.zeros((2,2))
-                        if len(temp[0])>0:
-                                
-                                for neighbor in temp[0]:
-                                        dx_next=self.xnext[neighbor]-self.xnext[k]
-                                        dy_next=self.ynext[neighbor]-self.ynext[k]
-                                        dx=self.x[neighbor]-self.x[k]
-                                        dy=self.y[neighbor]-self.y[k]
-                                        X[0,0]+=dx_next*dx
-                                        X[0,1]+=dx_next*dy
-                                        X[1,0]+=dy_next*dx
-                                        X[1,1]+=dy_next*dy
-                                        Y[0,0]+=dx*dx
-                                        Y[0,1]+=dx*dy
-                                        Y[1,0]+=dy*dx
-                                        Y[1,1]+=dy*dy
-                                epsilon[0,0]+=(X[0,0]/Y[0,0]+X[0,1]/Y[0,1])
-                                epsilon[0,1]+=(X[0,0]/Y[1,0]+X[0,1]/Y[1,1])
-                                epsilon[1,0]+=(X[1,0]/Y[0,0]+X[1,1]/Y[0,1])
-                                epsilon[1,1]+=(X[1,0]/Y[1,0]+X[1,1]/Y[1,1])
-
-                                for neighbor in temp[0]:
-                                        dx_next=self.xnext[neighbor]-self.xnext[k]
-                                        dy_next=self.ynext[neighbor]-self.ynext[k]
-                                        dx=self.x[neighbor]-self.x[k]
-                                        dy=self.y[neighbor]-self.y[k]
-                                        D2_min[k]+=((dx_next- (epsilon[0,0]*dx+epsilon[0,1]*dy))**2+ (dy_next-(epsilon[1,0]*dx+epsilon[1,1]*dy))**2)
-                        
-                                                                    
+                    temp=[]
+                    dist2=(self.x-self.x[k])**2+(self.y-self.y[k])**2
+                    rad2=(self.rad[k]+np.mean(self.rad)+threshold_rad)**2
+                    # yes, that includes myself, but that term drops out
+                    temp=np.nonzero(dist2<rad2)
+                    X=np.zeros((2,2))
+                    Y=np.zeros((2,2))
+                    epsilon=np.zeros((2,2))
+                    if len(temp[0])>0:
+                        C1=0.0
+                        C2=0.0
+                        C3=0.0
+                        C4=0.0
+                        C5=0.0
+                        C6=0.0
+                        C7=0.0
+                        C8=0.0
+                        for neighbor in temp[0]:
+                            C1+=(self.x[neighbor]**2)
+                            C2+=(self.y[neighbor]**2)
+                            C3+=(2*self.x[neighbor]*self.y[neighbor])
+                            C4+=(-2*self.xnext[neighbor]*self.x[neighbor])
+                            C5+=(-2*self.xnext[neighbor]*self.y[neighbor])
+                            C6+=(-2*self.ynext[neighbor]*self.x[neighbor])
+                            C7+=(-2*self.ynext[neighbor]*self.y[neighbor])
+                            C8+=(self.xnext[neighbor]**2+self.ynext[neighbor]**2)
+                    minimum = fmin(nested_f,np.asarray([1,0,0,1]))
+                    D2_min[k]+=(nested_f(np.asarray(minimum))/len(temp[0]))                          
                 return D2_min
                 
         
