@@ -676,14 +676,18 @@ class Analysis:
 			#n, bins, patches = plt.hist(np.log(D2_min), 50, facecolor='g')
 			# use now a color scheme not unlike the ones above.
 			# This has a rather odd distribution ...
-			D2_scale=np.mean(np.log(D2_min))-np.amin(np.log(D2_min))
+			# Now the distribution of log(D2_min) is mostly between -3 and 1
+			# D2_scale=np.mean(np.log(D2_min))-np.amin(np.log(D2_min))
 			radscale=np.mean(self.conf.rad)
 			Fcolor,Fmap=self.color_init(3.0)
 			for k in range(self.N):
-                            duse=np.log(D2_min[k])-np.amin(np.log(D2_min))
-                            if (duse>3.0*D2_scale):
-                                duse=3.0*D2_scale
-                            cir1=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=0.5*radscale*duse/D2_scale,ec=Fcolor(duse/D2_scale),fc=Fcolor(duse/D2_scale), linewidth=2)
+                            duse=np.log(D2_min[k])+3.0
+                            if duse<0:
+                            	duse=0.0
+                            elif duse>4:
+                            	duse=4.0
+			    greyscale=1-duse/4.0
+                            cir1=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=0.25*radscale*duse,ec=(greyscale,greyscale,greyscale),fc=Fcolor(duse/D2_scale), linewidth=2)
                             axval.add_patch(cir1)
 		
 		for k in range(len(self.pebbles.Ifull)):
@@ -715,7 +719,7 @@ class Analysis:
                         axval.set_xlim(xmin,xmin+self.Lx+120)
                         axval.set_ylim(ymin,ymin+self.Ly+120)
 		#plt.colorbar(cpick,label="deformation field")
-		plt.title(' D2 (log-scale)')
+		plt.title(r'$ D2_{min}$ (log-scale)')
 		return fig
 		
 
