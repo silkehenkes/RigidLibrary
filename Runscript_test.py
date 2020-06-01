@@ -12,6 +12,7 @@ import Configuration as CF
 import Pebbles as PB
 import Hessian as HS
 import Analysis as AN
+import Holes as HO
 
 
 # Location of data to analyse
@@ -27,6 +28,7 @@ inilabel=3446
 dlabel=2
 #nsteps=12
 nsteps=1000
+thresh=2e-4
 AllCorrelations=[[],[],[],[],[],[],[],[],[],[],[]]
 # explicit prefixes: These are the default values, so not necessary here unless this changes
 prefix1='DSC'
@@ -83,7 +85,8 @@ for experiment in experiment_nums:
 		                        fig1 = ThisAnalysis.plotStresses(True,False,False,True,False)
 		                        #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):
 		                        #ThisAnalysis.plotPebbles(True,True,True,False,False)
-		                        #fig2 = ThisAnalysis.plotPebbles(True,True,False,True,False)
+					if frac>0:
+		                        	fig2 = ThisAnalysis.plotPebbles(True,True,False,True,False)
 		                        
 		                        
 		                        ######### continuing with the Hessian now 
@@ -92,52 +95,35 @@ for experiment in experiment_nums:
 		                        ThisHessian.makeHessian(True,False,0,True)
 		                        # diagonalising the matrix
 		                        # def getModes(self,debug=False):
-		                        ThisHessian.getModes(True)
+					fig3=ThisHessian.getModes(True)
 		                        
 		                        ##### a couple of checks on the modes (optional)
 		                        #plotModes(self,usepts):
 		                        #usepts=[3*ThisConf.N-5,3*ThisConf.N-4,3*ThisConf.N-3,3*ThisConf.N-2,3*ThisConf.N-1]
 		                        #ThisHessian.plotModes(usepts)
 		                        #plotZeroModes(self,thresh=2e-8,simple=True):
-		                        ThisHessian.plotZeroModes()
+		                        fig4=ThisHessian.plotZeroModes()
 		                        
 		                        ############ Now look for the cross-correlations
 		                        # what is rigid according to modes with a given threshold:
-		                        fig3 = ThisAnalysis.ModeClusters('translations',2e-4)
+		                        fig5 = ThisAnalysis.ModeClusters('translations',thresh)
 		                        # how this cross-correlates to rigidy according to pebbles:
-		                        P_eig_if_pebble,P_pebble_if_eig,fig5 = ThisAnalysis.RigidModesCorrelate(2e-4)
+		                        P_eig_if_pebble,P_pebble_if_eig,fig6 = ThisAnalysis.RigidModesCorrelate(2e-4)
 		                        # These are the conditional probabilities of being rigid by mode while being rigid by pebble and the reverse
 		                        print P_eig_if_pebble,P_pebble_if_eig
 		                        # if there is a next data set
 		                        if ThisConf.Nnext>0:
-		                            P_disp_if_pebble,P_pebble_if_disp, fig6 = ThisAnalysis.RigidDisplacementsCorrelate(2e-4)
+		                            P_disp_if_pebble,P_pebble_if_disp,P_disp_if_eig,P_eig_if_disp,fig7 = ThisAnalysis.RigidDisplacementsCorrelate(thresh)
 		                            # Conditional probabilities of being rigid by displacement while being rigid by pebble
 		                            print P_disp_if_pebble,P_pebble_if_disp
 		                            # D2_min, needs assessment
-		                            fig7 = ThisAnalysis.DisplacementCorrelateD2min(True)
-
-		                        AllCorrelations[0].append(float(2.0*ThisConf.ncon/(ThisConf.N-4.0)))
-		                        AllCorrelations[1].append(float(2.0*ThisConf.ncon/ThisConf.N_NoRattler))   
-		                        AllCorrelations[2].append(P_eig_if_pebble)
-		                        AllCorrelations[3].append(P_pebble_if_eig)
-		                        AllCorrelations[4].append(P_disp_if_pebble)
-		                        AllCorrelations[5].append(P_pebble_if_disp)
-		                        AllCorrelations[6].append(direction)
-		                        AllCorrelations[7].append(frac)
-		                        AllCorrelations[8].append(fracmax)
-		                        AllCorrelations[9].append(lenx)
-		                        AllCorrelations[10].append(leny)
-
-                                              
-                        
-#plt.show()       
-# print AllCorrelations
-np.savetxt('AllCorrelations_of_'+str(len(AllCorrelations[0]))+'_Samples.txt',AllCorrelations)
-# data=np.loadtxt('AllCorrelations3_reverse.txt')
-# plt.plot(data[:,0],data[:,1],'-o',label='P_eig_if_pebble')
-# plt.plot(data[:,0],data[:,2],'-o',label='P_pebble_if_eig')
-# plt.plot(data[:,0],data[:,3],'-o',label='P_disp_if_pebble')
-# plt.plot(data[:,0],data[:,4],'-o',label='P_pebble_if_disp')
-# plt.ylim(0,1)
-# plt.legend(loc='upper left')
-# plt.show()
+		                            # fig8 = ThisAnalysis.DisplacementCorrelateD2min(True)
+					
+					ThisHo = HO.Holes(ThisConf, ThisPebble, False)        
+		                        ThisHo.makeHalfEdge()
+		                        nHole,HoleZ,HolePerim,HoleArea = ThisHo.sortHoles()  
+		                        fig9 = ThisHo.plotHoles() 
+		                        
+					plt.clf()
+					plt.close()
+		                     
