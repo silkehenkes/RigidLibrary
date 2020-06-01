@@ -11,6 +11,8 @@ import sys, os, glob
 import numpy as np
 import random
 from scipy.optimize import fmin
+import math
+from scipy.spatial import Voronoi, voronoi_plot_2d
 
 class Configuration:
         
@@ -508,6 +510,37 @@ class Configuration:
 
 
         #### ======================== Analysis helper functions	 =================================================
+        def getArea(self):
+            epsilon=-1
+            Positions=np.concatenate((self.x[:self.N-4],self.y[:self.N-4])).reshape((self.N-4,2))
+            BoundaryOrNot=np.zeros(self.N,dtype=bool)
+            Area=np.zeros(self.N-4)
+            vor = Voronoi(Positions)
+            PositionVertices=vor.vertices
+            RidgePoints=vor.ridge_points
+            RidgeVertices=vor.ridge_vertices
+            for i in range(len(RidgePoints[:,0])):
+                point_i=RidgePoints[i,0]
+                point_j=RidgePoints[i,1]
+                if RidgeVertices[i][0]>=0 and RidgeVertices[i][1]>=0:
+                    x1=PositionVertices[RidgeVertices[i][0],0]
+                    y1=PositionVertices[RidgeVertices[i][0],1]
+                    x2=PositionVertices[RidgeVertices[i][1],0]
+                    y2=PositionVertices[RidgeVertices[i][1],1]
+                    x3=Positions[point_i,0]
+                    y3=Positions[point_i,1]
+                    Area[point_i]+=abs(0.5*(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)))
+                    x4=Positions[point_j,0]
+                    y4=Positions[point_j,1]
+                    Area[point_j]+=abs(0.5*(x1*(y2-y4)+x2*(y4-y1)+x4*(y1-y2)))
+                else:
+                    BoundaryOrNot[point_i]=True
+                    BoundaryOrNot[point_j]=True
+            for i in range(self.N-4):
+                if BoundaryOrNot[i] or Area[i]>30000:
+                    Area[i]=math.pi*self.rad[i]**2
+            return Area
+
         
         # computes basic contact, force, torque, and stress statistics
         def getStressStat(self):
@@ -602,6 +635,7 @@ class Configuration:
                 return D2_min
                 
         
+        
         # ====== Experimental or simulation displacements, decomposed into normal, tangential and potentiallt rotational displecements
         def Disp2Contacts(self,minThresh,debug=False):
                 disp2n=np.zeros(self.ncon)
@@ -674,3 +708,17 @@ class Configuration:
                         y0=y1
                 return x0,x1,y0,y1
         
+        # same, but only for plotting holes
+        def getConPos3(self,k1,k2):
+                x0=self.x[k1]
+                x1=self.x[k2]
+                y0=self.y[k1]
+                y1=self.y[k2]
+                if self.periodic:
+                        x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                        yover=np.round((y1-y0)/self.Ly)
+                        if (yover!=0):
+                                y1=y1-self.Ly*yover
+                                x1-=self.Lx*self.strain*yover
+                                x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                return x0,x1,y0,y1
