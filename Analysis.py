@@ -478,8 +478,10 @@ class Analysis:
 		# This is now done within the Hessian class through ModeContacts
                 eign, eigt, eigr, eiggear = self.hessian.ModeContacts()
                 # Replace by internal threshold instead!
-                thresh=0.25*np.mean(eign+eigt)
-                
+                # thresh=0.25*np.mean(eign+eigt)
+		
+                # after testing, this threshold could vary. we use 2e-5 as default.
+		thresh=2e-5
 		# Make proper threshold plots
 		for k in range(self.ncon):
 			
