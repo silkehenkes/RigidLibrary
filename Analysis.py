@@ -309,8 +309,12 @@ class Analysis:
                         ymin=np.amin(self.conf.y)-20
                         axval.set_xlim(xmin,xmin+self.Lx+120)
                         axval.set_ylim(ymin,ymin+self.Ly+120)
-		axval.set_title('System with ' + str(self.pebbles.freepeb) + ' free pebbles and ' + str(self.pebbles.fail) + ' failed contacts')
+		# axval.set_title('System with ' + str(self.pebbles.freepeb) + ' free pebbles and ' + str(self.pebbles.fail) + ' failed contacts')
 		# returning figure pointer for use outside (like plotting or saving)
+		axval.spines['bottom'].set_color('b')
+		axval.spines['top'].set_color('r')
+		axval.spines['left'].set_color('r')
+		axval.spines['right'].set_color('b')
 		if 'figure' in kwargs:
 			return fig
 		elif 'axis' in kwargs:
@@ -518,6 +522,12 @@ class Analysis:
 			else:
 				print "Unknown mode, doing nothing!"
 		axval.axis('scaled')
+		axval.spines['bottom'].set_color('b')
+		axval.spines['top'].set_color('r')
+		axval.spines['left'].set_color('r')
+		axval.spines['right'].set_color('b')
+		for axis in ['top','bottom','left','right']:
+			axval.spines[axis].set_linewidth(3)
 		if self.conf.datatype=='simulation':
                         axval.set_xlim(-self.Lx/2,self.Lx/2)
                         axval.set_ylim(-self.Ly/2,self.Ly/2)
