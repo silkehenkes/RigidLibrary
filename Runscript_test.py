@@ -80,7 +80,7 @@ for experiment in experiment_nums:
                         #def plotStresses(self,plotCir,plotVel,plotCon,plotF,plotStress,**kwargs):
                         fig1 = ThisAnalysis.plotStresses(True,False,False,True,False)
                         #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):
-                        #ThisAnalysis.plotPebbles(True,True,True,False,False)
+                        fig0 = ThisAnalysis.plotPebbles(True,True,True,False,False)
                         fig2 = ThisAnalysis.plotPebbles(True,True,False,True,False)
                         
                         
