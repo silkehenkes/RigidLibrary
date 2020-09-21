@@ -10,6 +10,7 @@ import Configuration as CF
 import Pebbles as PB
 import Hessian as HS
 import Analysis as AN
+import Holes as HO
 
 import matplotlib.pyplot as plt
 
@@ -22,7 +23,7 @@ directions=['forward']
 experiment_nums=['23']
 inilabel=5406
 dlabel=2
-#nsteps=12
+#nsteps=5
 nsteps=2
 # explicit prefixes: These are the default values, so not necessary here unless this changes
 prefix1='DSC'
@@ -78,34 +79,42 @@ for experiment in experiment_nums:
                         fig2 = ThisAnalysis.plotPebbles(True,True,False,True,False)
                         
                         
-                        ######### continuing with the Hessian now 
-                        # constructing the matrix
-                        #  makeHessian(self,frictional,recomputeFnor,stabilise,verbose=False):
-                        ThisHessian.makeHessian(True,False,0,True)
-                        # diagonalising the matrix
-                        # def getModes(self,debug=False):
-                        ThisHessian.getModes(True)
+                        ########## continuing with the Hessian now 
+                        ## constructing the matrix
+                        ##  makeHessian(self,frictional,recomputeFnor,stabilise,verbose=False):
+                        #ThisHessian.makeHessian(True,False,0,True)
+                        ## diagonalising the matrix
+                        ## def getModes(self,debug=False):
+                        #ThisHessian.getModes(True)
                         
-                        ##### a couple of checks on the modes (optional)
-                        #plotModes(self,usepts):
-                        #ThisHessian.plotModes([0,1,2,3,4,5])
-                        #plotZeroModes(self,thresh=2e-8,simple=True):
-                        ThisHessian.plotZeroModes()
+                        ###### a couple of checks on the modes (optional)
+                        ##plotModes(self,usepts):
+                        ##ThisHessian.plotModes([0,1,2,3,4,5])
+                        ##plotZeroModes(self,thresh=2e-8,simple=True):
+                        #ThisHessian.plotZeroModes()
                         
-                        ############ Now look for the cross-correlations
-                        # what is rigid according to modes with a given threshold:
-                        fig3 = ThisAnalysis.ModeClusters('translations',2e-4)
-                        # how this cross-correlates to rigidy according to pebbles:
-                        P_eig_if_pebble,P_pebble_if_eig,fig5 = ThisAnalysis.RigidModesCorrelate(2e-4)
-                        # These are the conditional probabilities of being rigid by mode while being rigid by pebble and the reverse
-                        print P_eig_if_pebble,P_pebble_if_eig
-                        # if there is a next data set
-                        if ThisConf.Nnext>0:
-                            P_disp_if_pebble,P_pebble_if_disp, fig6 = ThisAnalysis.RigidDisplacementsCorrelate(2e-4)
-                            # Conditional probabilities of being rigid by displacement while being rigid by pebble
-                            print P_disp_if_pebble,P_pebble_if_disp
-                            # D2_min, needs assessment
-                            fig7 = ThisAnalysis.DisplacementCorrelateD2min(True)
+                        ############# Now look for the cross-correlations
+                        ## what is rigid according to modes with a given threshold:
+                        #fig3 = ThisAnalysis.ModeClusters('translations',2e-4)
+                        ## how this cross-correlates to rigidy according to pebbles:
+                        #P_eig_if_pebble,P_pebble_if_eig,fig5 = ThisAnalysis.RigidModesCorrelate(2e-4)
+                        ## These are the conditional probabilities of being rigid by mode while being rigid by pebble and the reverse
+                        #print P_eig_if_pebble,P_pebble_if_eig
+                        ## if there is a next data set
+                        #if ThisConf.Nnext>0:
+                            #P_disp_if_pebble,P_pebble_if_disp, fig6 = ThisAnalysis.RigidDisplacementsCorrelate(2e-4)
+                            ## Conditional probabilities of being rigid by displacement while being rigid by pebble
+                            #print P_disp_if_pebble,P_pebble_if_disp
+                            ## D2_min, needs assessment
+                            #fig7 = ThisAnalysis.DisplacementCorrelateD2min(True)
+                            
+                        ############ Counting holes
+                        ThisHole = HO.Holes(ThisConf,ThisPebble)
+                        ThisHole.makeHalfEdge()
+                        nHole,HolePerim,HoleArea=ThisHole.sortHoles()
+                        fig8 = ThisHole.plotHoles()
+                        fig9 = ThisHole.plotFaces()
+                        
                                               
                         
 plt.show()       
