@@ -18,112 +18,76 @@ import copy as cp
 
 class Pebbles:
         
-        ## ==== Pebble constructor: give it a configuration, the (game10,game20) type of game you want to play, and any modifiers you want to apply
-        # (none defined so far, but e.g. adding random bonds, or adding 2nd neighbours)
-        def __init__(self,conf, game10,game20,modifier='nothing',verbose0=False):
-            self.N=conf.N
-            self.game1=game10
-            self.game2=game20
-            self.verbose=verbose0
-            # let's figure out the type of game:
-            if modifier=='nothing':
-                print "We are running a (" + str(self.game1)+ "," + str(self.game2) + ") game."
-                # that's a (x,3) or (x,3) game 
-                if (self.game2==3) or (self.game2==2):
-                    if (self.game2==2):
-                        print "Warning: (2,x) pebble game, using common pebble game code, but results may vary"
-                    # if we have a (2,3) game, simply use the contacts as is for the pebble game
-                    if (self.game1==2):
-                        self.ncon2=conf.ncon
-                        self.Ifull=conf.I
-                        self.Jfull=conf.J
-                    # if we have a (3,3) pebble game, add the frictional bonds as default behaviour
-                    elif (self.game1==3):
-                        self.AddFrictionalBonds(conf)
-                else:
-                    print "Atypical pebble game, stopping for now as unclear meaning. If you really must, construct a new modifier type to deal with this game and any extra / deleted contacts."
-            else:
-                print "Modified pebble games (2nd neighbours, or single contacts, or deleted contacts). Not implemented yet, please construct new functions similar to AddFrictionalBonds(conf) to modify contact lists."
-            # Reverse connection object: necessary for marking both rigid clusters and overconstrained regions
-            self.conmat=[[] for _ in range(self.N)]
-            for k in range(self.ncon2):
-                    i=int(self.Ifull[k])
-                    j=int(self.Jfull[k])
-                    self.conmat[i].append(k)
-                    self.conmat[j].append(k)
-                    if self.verbose:
-                            print 'Contact ' + str(k) + ' with particles ' + str(i) + ' ' + str(j)
-                        
-         
-        ### ===================== Functions to add extra bonds or otherwise modify the contact list =============
-        # Frictional bonds based on mobilisation
-        def AddFrictionalBonds(self,conf):
-            self.ncon2=conf.ncon+np.sum(conf.fullmobi==0)
-            print conf.ncon
-            print self.ncon2
+	## ==== Pebble constructor: give it a configuration, the (game10,game20) type of game you want to play, and any modifiers you want to apply
+	# (none defined so far, but e.g. adding random bonds, or adding 2nd neighbours)
+	def __init__(self,conf, game10,game20,modifier='nothing',verbose0=False):
+		self.N=conf.N
+		self.game1=game10
+		self.game2=game20
+		self.verbose=verbose0
+		# let's figure out the type of game:
+		if modifier=='nothing':
+			print ("We are running a (" + str(self.game1)+ "," + str(self.game2) + ") game.")
+			# that's a (x,3) or (x,3) game 
+			if (self.game2==3) or (self.game2==2):
+				if (self.game2==2):
+					print ("Warning: (2,x) pebble game, using common pebble game code, but results may vary")
+				# if we have a (2,3) game, simply use the contacts as is for the pebble game
+				if (self.game1==2):
+					self.ncon2=conf.ncon
+					self.Ifull=conf.I
+					self.Jfull=conf.J
+				# if we have a (3,3) pebble game, add the frictional bonds as default behaviour
+				elif (self.game1==3):
+					self.AddFrictionalBonds(conf)
+			else:
+				print ("Atypical pebble game, stopping for now as unclear meaning. If you really must, construct a new modifier type to deal with this game and any extra / deleted contacts.")
+		else:
+			print ("Modified pebble games (2nd neighbours, or single contacts, or deleted contacts). Not implemented yet, please construct new functions similar to AddFrictionalBonds(conf) to modify contact lists.")
+		# Reverse connection object: necessary for marking both rigid clusters and overconstrained regions
+		self.conmat=[[] for _ in range(self.N)]
+		for k in range(self.ncon2):
+				i=int(self.Ifull[k])
+				j=int(self.Jfull[k])
+				self.conmat[i].append(k)
+				self.conmat[j].append(k)
+				if self.verbose:
+						print ('Contact ' + str(k) + ' with particles ' + str(i) + ' ' + str(j))
+					
+		
+	### ===================== Functions to add extra bonds or otherwise modify the contact list =============
+	# Frictional bonds based on mobilisation
+	def AddFrictionalBonds(self,conf):
+		self.ncon2=conf.ncon+np.sum(conf.fullmobi==0)
+		print (conf.ncon)
+		print (self.ncon2)
 
-            self.Ifull=[0]*self.ncon2
-            self.Jfull=[0]*self.ncon2
-            jj=0
-            # add the fully mobilized contacts at the bottom of the list
-            # not concurrently, because numbers of contacts are affected
-            self.Ifull[:conf.ncon]=conf.I
-            self.Jfull[:conf.ncon]=conf.J
-            for k in range (conf.ncon):
-                    if (conf.fullmobi[k]==0):
-                            self.Ifull[conf.ncon+jj]=conf.I[k]
-                            self.Jfull[conf.ncon+jj]=conf.J[k]
-                            jj+=1
-            print("Sizes of full contact objects:" + str(len(self.Ifull)))
-            
-        
-        # Here go further methods to either add bonds, remove bonds or modify the connectivity
-        
-        def AddBoundary(self):
-                return 0
-                
-        def AddSecondNeighbour(self):
-                return 0
-        
+		self.Ifull=[0]*self.ncon2
+		self.Jfull=[0]*self.ncon2
+		jj=0
+		# add the fully mobilized contacts at the bottom of the list
+		# not concurrently, because numbers of contacts are affected
+		self.Ifull[:conf.ncon]=conf.I
+		self.Jfull[:conf.ncon]=conf.J
+		for k in range (conf.ncon):
+			if (conf.fullmobi[k]==0):
+				self.Ifull[conf.ncon+jj]=conf.I[k]
+				self.Jfull[conf.ncon+jj]=conf.J[k]
+				jj+=1
+		print("Sizes of full contact objects:" + str(len(self.Ifull)))
+		
+	
+	# Here go further methods to either add bonds, remove bonds or modify the connectivity
+	
+	def AddBoundary(self):
+			return 0
+			
+	def AddSecondNeighbour(self):
+			return 0
+	
 	def AddRandombonds(self):
 		return 0
          
-        ############  Kuang's AddSomeContacts, need to be modified to be compatible with class structure
-   #      def AddSomeContacts(self,conf,percentage):
-			# new_ncon=int((1+0.01*percentage)*conf.ncon)
-			# self.Iadded=[0]*new_ncon
-			# self.Jadded=[0]*new_ncon
-			# self.fullmobiadded=np.zeros(new_ncon)
-			# self.Iadded[:conf.ncon]=conf.I
-			# self.Jadded[:conf.ncon]=conf.J
-			# self.fullmobiadded[:conf.ncon]=conf.fullmobi
-			# fraction_double_bonds=float(np.sum(conf.fullmobi==0)/conf.ncon)
-			# Num_add_d_bonds=int(fraction_double_bonds*percentage*conf.ncon)
-
-			# I_base=[]
-			# J_base=[]
-			# for i in range(len(conf.x)-1):
-			# 	for j in range(i+1,len(conf.x)):
-			# 		if abs(conf.x[i]-conf.x[j])<=(conf.rad[i]+conf.rad[j]) and abs(conf.y[i]-conf.y[j])<=(conf.rad[i]+conf.rad[j]):
-			# 			for k in range(len(conf.I)):
-			# 				if conf.I[k]==i and conf.J[k]==j:
-			# 					break
-			# 				else:
-			# 					if conf.I[k]==j and conf.J[k]==i:
-			# 						break
-			# 					else:
-			# 						I_base.append(i)
-			# 						J.base.append(j)
-			# 						break
-
-			# Order=random.shuffle(list(range(0, len(I_base))))
-			# for i in range(new_ncon-conf.ncon):
-			# 	self.Iadded[conf.ncon+i]=I_base[Order[i]]
-			# 	self.Jadded[conf.ncon+i]=J_base[Order[i]]
-			# 	if i>=Num_add_d_bonds :
-			# 		self.fullmobiadded[conf.ncon+i]=1
-
-			################conf.ncon, conf.fnor, conf.ftan, conf.fullmobi need to be updated.
 				
 	### ================================ The pebble game ==============================================
 	def play_game(self):
@@ -145,7 +109,7 @@ class Pebbles:
 				result=self.enlarge_cover(pebblescopy,i,j)
 				#if (self.verbose):
 					#if result==1:
-						#print "No pebble found in search at contact" + str(k)
+						#print ("No pebble found in search at contact" + str(k))
 			if result==0:
 				result=self.enlarge_cover(self.pebbles,i,j)
 				self.ptr[k]=0
@@ -201,7 +165,7 @@ class Pebbles:
 				stopthis=False
 				if len(bonds)>1:
 					if self.verbose:
-						print "Checking over double bonds" + str(bonds)
+						print( "Checking over double bonds" + str(bonds))
 					k2=bonds[0]
 					if k2==k:
 						k2=bonds[1]
@@ -210,8 +174,8 @@ class Pebbles:
 					if self.cluster[k2]!=-1:
 						stopthis=True
 						self.cluster[k]=self.cluster[k2]
-						print "Double bond " + str(k) + " neighbour of " + str(k2) + " was also labeled cluster " + str(self.cluster[k])
-						print "Add one to cluster length " + str(k)
+						print ("Double bond " + str(k) + " neighbour of " + str(k2) + " was also labeled cluster " + str(self.cluster[k]))
+						print ("Add one to cluster length " + str(k))
 						clusterall[self.cluster[k2]]+=1
 				if stopthis==False:
 					if self.verbose:
@@ -265,7 +229,7 @@ class Pebbles:
 						print('Cluster length ' + str(cluslen))
 						ctry=self.rig_path(marked,rigid,True)
 						if ctry!=self.cidx:
-							print "WARNING: Found a (part) duplicate cluster. Merge length here with cluster " + str(ctry)
+							print ("WARNING: Found a (part) duplicate cluster. Merge length here with cluster " + str(ctry))
 							cidxstore=self.cidx
 							self.cidx=ctry
 							ctry=self.rig_path(marked,rigid,False)
@@ -283,14 +247,14 @@ class Pebbles:
 							self.maxidx=ctry
 					else:
 						self.cidx-=1
-                print "Cluster sizes (particles)"
-                print clusterall
-                print "Cluster sizes (bonds)"
-                print clusterallBonds
-                print "Cluster labels"
-                print clusteridx
-                # Note: Further rigid cluster analysis has been moved to Analysis class
-                return self.cidx, clusterall, clusterallBonds, clusteridx, BigCluster
+		print ("Cluster sizes (particles)")
+		print (clusterall)
+		print ("Cluster sizes (bonds)")
+		print (clusterallBonds)
+		print ("Cluster labels")
+		print (clusteridx)
+		# Note: Further rigid cluster analysis has been moved to Analysis class
+		return self.cidx, clusterall, clusterallBonds, clusteridx, BigCluster
 		
         
 	#========================== The pebble game core functions ========================================	
@@ -372,7 +336,7 @@ class Pebbles:
 					if (marked[u] and rigid[u]):
 						if tentative:
 							if self.cluster[c]>-1 and self.cluster[c]!=self.cidx:
-								print "WARNING!! Attempting to relabel a *bond* from " + str(self.cluster[c])
+								print ("WARNING!! Attempting to relabel a *bond* from " + str(self.cluster[c]))
 								return self.cluster[c]
 						self.cluster[c]=self.cidx
 						if self.verbose:
@@ -403,54 +367,54 @@ class Pebbles:
 		path[i]=-1
 		found=False
 		for k in range(self.game1):
-                        if (pbcopy[i,k].astype(int)==-1):
-                            found=True
+			if (pbcopy[i,k].astype(int)==-1):
+				found=True
 		# if there is not free pebble at vertex v
 		if not found:
 			k=0
 			while (not found) and (k<self.game1):
-                            j=pbcopy[i,k].astype(int)
-                            if (not seen[j]):
-                                    path[i]=pbcopy[i,k].astype(int) # just use the neighbor. rewrite as I and J later if useful
-                                    found=self.find_pebble(pbcopy,j,seen,path)
-                            k+=1
+				j=pbcopy[i,k].astype(int)
+				if (not seen[j]):
+					path[i]=pbcopy[i,k].astype(int) # just use the neighbor. rewrite as I and J later if useful
+					found=self.find_pebble(pbcopy,j,seen,path)
+				k+=1
 		return found
 		
 	# Find pebble in the presence of rigid and floppy sites
 	def find_pebble2(self,pbcopy,i,seen,path,marked,rigid):
-		## print 'looking for a pebble at vertex ' + str(i)
+		## print ('looking for a pebble at vertex ' + str(i))
 		seen[i]=True
 		path[i]=-1
 		found=False
 		# if there is a free pebble at vertex v
 		for k in range(self.game1):
-                        if (pbcopy[i,k].astype(int)==-1):
-                            ## print 'found a free pebble here at vertex' + str(i)
-                            found=True
-                if not found:
-			# Look at the contacts covered by pebbles in turn. If they haven't been accessed by the search yet
-			# look along those paths, recursively, until you find something (or not)
-			# For marked sites: if the site is marked rigid, there is no pebble here, stop the subloop. If it's marked floppy, there must be a pebble
-			# somewhere along its path, so stop the whole thing with a positive result
-			if marked[int(i)]==True:
-				if (rigid[int(i)]==False):
-					found=True
-			else:
-                                k=0
-                                while (not found) and (k<self.game1):
-                                    j=pbcopy[i,k].astype(int)
-                                    if (not seen[j]):
-                                            path[i]=pbcopy[i,k].astype(int) # just use the neighbor. rewrite as I and J later if useful
-                                            found=self.find_pebble2(pbcopy,j,seen,path,marked,rigid)
-                                    k+=1
+			if (pbcopy[i,k].astype(int)==-1):
+				## print ('found a free pebble here at vertex' + str(i))
+				found=True
+			if not found:
+				# Look at the contacts covered by pebbles in turn. If they haven't been accessed by the search yet
+				# look along those paths, recursively, until you find something (or not)
+				# For marked sites: if the site is marked rigid, there is no pebble here, stop the subloop. If it's marked floppy, there must be a pebble
+				# somewhere along its path, so stop the whole thing with a positive result
+				if marked[int(i)]==True:
+					if (rigid[int(i)]==False):
+						found=True
+				else:
+					k=0
+					while (not found) and (k<self.game1):
+						j=pbcopy[i,k].astype(int)
+						if (not seen[j]):
+							path[i]=pbcopy[i,k].astype(int) # just use the neighbor. rewrite as I and J later if useful
+							found=self.find_pebble2(pbcopy,j,seen,path,marked,rigid)
+						k+=1
 		return found
 		
 	# Rearranging search paths after pebble is found
 	def rearrange_pebbles(self,pbcopy,i,j,path):
-		## print 'entering rearrange pebbles; path of i is' + str(path[i])
+		## print ('entering rearrange pebbles; path of i is' + str(path[i]))
 		if (path[i]==-1):
 			#adding the arrow pointing from i back to j
-			## print 'found a pebble right away; adding it in situ: # ' + str(i) + ' to '+ str(j)
+			## print ('found a pebble right away; adding it in situ: # ' + str(i) + ' to '+ str(j))
 			if (pbcopy[i,0]==-1):
 				pbcopy[i,0]=j
 			else:
@@ -462,7 +426,7 @@ class Pebbles:
 			#flip the arrow from l=pth(i) to j, then head further downstream doing the same thing until the end is reached
 			while (path[i]!=-1):
 				l=path[i]
-				## print 'flipping arrow at ' + str(i) + ' from ' + str(l) + ' to ' + str(j)
+				## print ('flipping arrow at ' + str(i) + ' from ' + str(l) + ' to ' + str(j))
 				if (l==pbcopy[i,0]):
 					pbcopy[i,0]=j # remove pebble and replace on ij contact, i.e. change label from l to i
 				else:
@@ -473,7 +437,7 @@ class Pebbles:
 				j=i
 				i=l
 			#and now that we've reached the end:    do the same as before
-			## print 'finally found a pebble adding arrow # ' + str(i) + ' to '+ str(j)
+			## print ('finally found a pebble adding arrow # ' + str(i) + ' to '+ str(j))
 			if (pbcopy[i,0]==-1):
 				pbcopy[i,0]=j
 			else:
@@ -488,19 +452,19 @@ class Pebbles:
 		seen=-1*np.zeros((self.N,))>0 
 		path=-1*np.zeros((self.N,), dtype=np.int)
 		found=self.find_pebble(pbcopy,i,seen,path)
-		## print 'looked for pebble along i; result is: ' + str(found)
+		## print ('looked for pebble along i; result is: ' + str(found))
 		if found:
 			self.rearrange_pebbles(pbcopy,i,j,path)
 			## print 'rearranged pebbles'
 			return 0 # success
 		if (not seen[j]):
 			found=self.find_pebble(pbcopy,j,seen,path)
-			## print 'looked for pebble along j; result is: ' + str(found)
+			## print ('looked for pebble along j; result is: ' + str(found))
 			if found:
 				self.rearrange_pebbles(pbcopy,j,i,path)
-				## print 'rearranged pebbles'
+				## print ('rearranged pebbles')
 				return 0 # success
-		## print 'pebble search failed!'
+		## print ('pebble search failed!')
 		return 1 # failure
 
 	# Cousin to mark overconstrained
@@ -508,13 +472,13 @@ class Pebbles:
 		seen=-1*np.zeros((self.N,))>0 
 		path=-1*np.zeros((self.N,), dtype=np.int)
 		found=self.find_pebble(pbcopy,i,seen,path)
-		## print 'looked for pebble along i; result is: ' + str(found)
+		## print ('looked for pebble along i; result is: ' + str(found))
 		if (not found):
 			self.mark_path_over(marked,path,i)
 			
 		if (not seen[j]):
 			found=self.find_pebble(pbcopy,j,seen,path)
-			## print 'looked for pebble along j; result is: ' + str(found)
+			## print ('looked for pebble along j; result is: ' + str(found))
 			if (not found):
 				self.mark_path_over(marked,path,j)
 				

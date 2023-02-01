@@ -15,18 +15,18 @@ import Analysis as AN
 import matplotlib.pyplot as plt
 
 # Location of data to analyse
-#topdir=''
-topdir='/home/sh18581/Documents/Friction/Debug/Shear/'
+#topdir='/directory/where/experimental/data/is/located/'
+topdir='./Example_Shear/'
 # experimental friction coefficient
 mu=0.3
 # More information about data set
 directions=['forward']
 experiment_nums=['23']
-#inilabel=5384
-inilabel=5408
+inilabel=5384
+#inilabel=5408
 dlabel=2
-#nsteps=12
 nsteps=2
+#nsteps=2
 # explicit prefixes: These are the default values, so not necessary here unless this changes
 prefix1='DSC'
 prefix2='_solved_Tracke_'
@@ -36,7 +36,7 @@ for experiment in experiment_nums:
         # and shear directions
         for direction in directions:
                 foldername=topdir+experiment+'/'+direction+'/'
-                print foldername
+                print (foldername)
                 # Create a new configuratin; the data in there will get replaced every time we read a new configuration
                 #def __init__(self,folder,datatype,mu0=0.2,prefix10='DSC',prefix20='_solved_Tracke_'):
                 ThisConf = CF.Configuration(foldername,'experiment',mu,prefix1,prefix2)
@@ -46,14 +46,16 @@ for experiment in experiment_nums:
                         # read in a specific step, careful with format of label
                         numlabel0 = inilabel+dlabel*u
                         numlabel = "%05d" %numlabel0
+                        print(numlabel)
                         #def ReadExpdata(self,numlabel,scale=False):
                         ThisConf.ReadExpdata(numlabel)
                         ThisConf.AddBoundaryContacts()
                         # also read in the next data at this point: dlabel further along in the numbering 
+                        # Revise at a later stage.
                         #def ReadExpdataNext(self,numlabel,scale=False):
-                        numlabel2 =  "%05d" %(numlabel0+dlabel)
-                        ThisConf.ReadExpdataNext(numlabel2)
-                        ThisConf.AddNextBoundaryContacts()
+                        #numlabel2 =  "%05d" %(numlabel0+dlabel)
+                        #ThisConf.ReadExpdataNext(numlabel2)
+                        #ThisConf.AddNextBoundaryContacts()
                         
                        
                         ########## Setting up and playing the pebble game
@@ -87,10 +89,10 @@ for experiment in experiment_nums:
                         ######### continuing with the Hessian now 
                         # constructing the matrix
                         #  makeHessian(self,frictional,recomputeFnor,stabilise,verbose=False):
-                        ThisHessian.makeHessian(True,False,0,True)
+                        ThisHessian.makeHessian(True,False,0,False)
                         # diagonalising the matrix
                         # def getModes(self,debug=False):
-                        ThisHessian.getModes(True)
+                        ThisHessian.getModes(False)
                         
                         ##### a couple of checks on the modes (optional)
                         #plotModes(self,usepts):
@@ -105,14 +107,15 @@ for experiment in experiment_nums:
                         # how this cross-correlates to rigidy according to pebbles:
                         P_eig_if_pebble,P_pebble_if_eig,fig5 = ThisAnalysis.RigidModesCorrelate(2e-4)
                         # These are the conditional probabilities of being rigid by mode while being rigid by pebble and the reverse
-                        print P_eig_if_pebble,P_pebble_if_eig
+                        print (P_eig_if_pebble,P_pebble_if_eig)
                         # if there is a next data set
-                        if ThisConf.Nnext>0:
-                            P_disp_if_pebble,P_pebble_if_disp, fig6 = ThisAnalysis.RigidDisplacementsCorrelate(2e-4)
-                            # Conditional probabilities of being rigid by displacement while being rigid by pebble
-                            print P_disp_if_pebble,P_pebble_if_disp
-                            # D2_min, needs assessment
-                            fig7 = ThisAnalysis.DisplacementCorrelateD2min(True)
+                        # Needs revision in any case, don't use for now
+                        #if ThisConf.Nnext>0:
+                        #    P_disp_if_pebble,P_pebble_if_disp, fig6 = ThisAnalysis.RigidDisplacementsCorrelate(2e-4)
+                        #    # Conditional probabilities of being rigid by displacement while being rigid by pebble
+                        #    print (P_disp_if_pebble,P_pebble_if_disp)
+                        #    # D2_min, needs assessment
+                        #    fig7 = ThisAnalysis.DisplacementCorrelateD2min(True)
                                               
                         
 plt.show()       

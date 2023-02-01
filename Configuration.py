@@ -20,7 +20,7 @@ class Configuration:
             self.datatype=datatype
             self.addBoundary=False
             if (datatype=='simulation'):
-                print "Reading simulation data!"
+                print ("Reading simulation data!")
                 self.getParameters(folder)
                 # Simulation data has periodic boundary conditions and also angles as output
                 self.periodic=True
@@ -34,7 +34,7 @@ class Configuration:
                 self.height=1.0
                 self.width=1.0
             elif (datatype=='experiment'):
-                print "Reading experimental data!"
+                print ("Reading experimental data!")
                 self.prefix1=prefix10
                 self.prefix2=prefix20 
                 self.mu=mu0
@@ -52,7 +52,7 @@ class Configuration:
                 # boundary width
                 self.width=20e-3
             else:
-                print "Error: Unknown type of data! Doing nothing."
+                print ("Error: Unknown type of data! Doing nothing.")
 
 
         #======= Simulation parameter read-in =====================
@@ -161,10 +161,10 @@ class Configuration:
         def ReadExpdata(self,numlabel):
                     
                 prefix = self.prefix1 + numlabel + self.prefix2
-                print "Starting analysis of experimental step " + prefix
+                print ("Starting analysis of experimental step " + prefix)
                 # Let's get the positions first
                 isPosdata=True
-                print self.folder+prefix + 'ParticleData.dlm'
+                print (self.folder+prefix + 'ParticleData.dlm')
                 try:
                     coords=np.loadtxt(self.folder+prefix + 'ParticleData.dlm',delimiter=',')
                     self.x=coords[:,1]
@@ -180,7 +180,7 @@ class Configuration:
                     self.y=0
                     self.rad=1 # purely so that we can divide by it ...
                     self.N=0
-                    print "Error: there is no position data here"
+                    print("Error: there is no position data here")
                 
                 # The contact data lives in the adjacency matrices
                 # As non-sparse N by N matrices (!)
@@ -191,7 +191,7 @@ class Configuration:
                     ftan0=np.loadtxt(self.folder+prefix+'TanWeightedAdjacencyMatrix.dlm',delimiter=',')
                 except:
                     isCondata=False
-                    print "Error: there is no contact data here"
+                    print ("Error: there is no contact data here")
                     return 1
                     
                 if isCondata:
@@ -250,7 +250,7 @@ class Configuration:
                     self.Ifull=-1
                     self.Jfull=-1
                     self.ncon=1
-                print "Read in a configruation of " + str(self.N) + " particles with " + str(self.ncon) + " unique contacts."
+                print ("Read in a configuration of " + str(self.N) + " particles with " + str(self.ncon) + " unique contacts.")
                 
                 # create the local normal coordinate system. Note that experiment never has periodic boundary conditions
                 self.nx=np.zeros(self.ncon)
@@ -273,7 +273,7 @@ class Configuration:
         def ReadExpdataNext(self,numlabel,scale=False):
             
                 prefix = self.prefix1 + numlabel + self.prefix2
-                print "Reading experimental step " + prefix + " as next data set."
+                print ("Reading experimental step " + prefix + " as next data set.")
                 # Let's get the positions first
                 isPosdata=True
                 try:
@@ -373,7 +373,7 @@ class Configuration:
                     fnor0=ftotx*nx0+ftoty*ny0
                     # (fx*(-ny)+fy*nx)
                     ftan0=ftotx*(-ny0)+ftoty*nx0
-                    #print ftan0
+                    #print (ftan0)
                     if (abs(ftan0)/fnor0>self.mu):
                         fullmobi_add.append(1)
                     else:
@@ -393,7 +393,7 @@ class Configuration:
             self.ny=np.concatenate((self.ny,np.array(ny_add)))
             self.ncon=len(self.I)
             self.N+=4
-            print "Added boundaries!"
+            print ("Added boundaries!")
                     
           
 
@@ -553,7 +553,7 @@ class Configuration:
                             disp2r[0]=(self.rad[j]*self.dalpha[j]-self.rad[i]*self.dalpha[i])**2
                             disp2gear[0]=((self.dx[j]-self.dx[i])*tx0+(self.dy[j]-self.dy[i])*ty0 - (self.rad[i]*self.dalpha[i]+self.rad[j]*self.dalpha[j]))**2
                 thresh=np.mean(disp2n+disp2t)
-                print "Internally generated threshold of " + str(thresh)
+                print ("Internally generated threshold of " + str(thresh))
                 if thresh<minThresh:
                     thresh=minThresh
                 if self.hasAngles:

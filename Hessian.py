@@ -27,17 +27,17 @@ matplotlib.rcParams['legend.fontsize']=14.0
 
 class Hessian:
     
-        #### === Hessian constructor, just giving it elematary information, does nothing with it ====
-        def __init__(self,conf0):
-                self.conf=conf0
-                # do throw it a bone - basic dimensional information ...
-                self.N=self.conf.N
-                self.ncon=self.conf.ncon
+	#### === Hessian constructor, just giving it elematary information, does nothing with it ====
+	def __init__(self,conf0):
+		self.conf=conf0
+		# do throw it a bone - basic dimensional information ...
+		self.N=self.conf.N
+		self.ncon=self.conf.ncon
 
 	#=========================== Hessian calculation ===============================
 	def makeHessian(self,frictional,recomputeFnor=False,stabilise=1e-8,verbose=False):
 		# This matrix is 3N by 3N.
-		print "Hessian: Info - allocating the " + str(3*self.N) + " by " + str(3*self.N) + " Hessian matrix."
+		print ("Hessian: Info - allocating the " + str(3*self.N) + " by " + str(3*self.N) + " Hessian matrix.")
 		self.Hessian=np.zeros((3*self.N,3*self.N))
 		# For friction, this needs to be a loop over all contacts. Not the Ifull one, the actual contact one!
 		# compute average off equilibrium force
@@ -47,7 +47,7 @@ class Hessian:
 		mrad=np.mean(self.conf.rad)
 		mscale=self.conf.density*self.conf.height*np.pi*(self.conf.rconversion*mrad)**2
 		self.eigscale=self.conf.stiffness/mscale
-		print "Estimating eigenvalue scale at " + str(self.eigscale) + " kg/s^2"
+		print ("Estimating eigenvalue scale at " + str(self.eigscale) + " kg/s^2")
 		# Careful now: We are only single-counting contacts these days
 		for k in range(self.ncon):
 			i=self.conf.I[k]
@@ -60,9 +60,9 @@ class Hessian:
 			# The boundary particle is always i, per construction (see configuration)
 			# see notes for detailed scaling 
 			if self.conf.addBoundary:
-                            if (i in self.conf.bindices):
-                                mi = self.conf.density*self.conf.height*self.conf.width*self.conf.rconversion*0.5*(self.conf.Lx+self.conf.Ly)
-                                Ai = (12.0*mrad**2/((0.5*(self.conf.Lx+self.conf.Ly))**2+(2*mrad)**2))**0.5
+				if (i in self.conf.bindices):
+					mi = self.conf.density*self.conf.height*self.conf.width*self.conf.rconversion*0.5*(self.conf.Lx+self.conf.Ly)
+					Ai = (12.0*mrad**2/((0.5*(self.conf.Lx+self.conf.Ly))**2+(2*mrad)**2))**0.5
                             
 			nx0=self.conf.nx[k]
 			ny0=self.conf.ny[k]
@@ -80,28 +80,28 @@ class Hessian:
 			# get the r betwen particles
 			dx=self.conf.x[j]-self.conf.x[i]
 			if self.conf.periodic:
-                            dx-=self.conf.Lx*round(dx/self.conf.Lx)
+				dx-=self.conf.Lx*round(dx/self.conf.Lx)
 			dy=self.conf.y[j]-self.conf.y[i]
 			if self.conf.periodic:
-                            dy-=self.conf.Ly*round(dy/self.conf.Ly)
+				dy-=self.conf.Ly*round(dy/self.conf.Ly)
 			rval=np.sqrt(dx**2+dy**2)
 			if recomputeFnor:
-                            if self.conf.datatype=='experiment':
-                                print "Warning: recomputing normal forces for the experiment. This is a bad idea!"
-			    # that's just overlap delta
-			    fn = kn*(self.conf.rad[i]+self.conf.rad[j]-rval)*self.conf.rconversion
-			    if fn<0:
-			        print "Funny contact with negative overlap between " + str(i)+ " and " + str(j)
-                                fn=0.0
+				if self.conf.datatype=='experiment':
+					print ("Warning: recomputing normal forces for the experiment. This is a bad idea!")
+				# that's just overlap delta
+				fn = kn*(self.conf.rad[i]+self.conf.rad[j]-rval)*self.conf.rconversion
+				if fn<0:
+					print ("Funny contact with negative overlap between " + str(i)+ " and " + str(j))
+					fn=0.0
 			else:
-			    fn=self.conf.fnor[k]
+				fn=self.conf.fnor[k]
 			if frictional:
-			    if self.conf.fullmobi[k]==0:
-			        kt=self.conf.stiffness
-			    else:
-			        kt=0.0
+				if self.conf.fullmobi[k]==0:
+					kt=self.conf.stiffness
+				else:
+					kt=0.0
 			else:
-			    kt = 0.0
+				kt = 0.0
 			# # This is our litte square in local coordinates (where nonzero)
 			subsquare=np.zeros((3,3))
 			subsquare[0,0]=-kn
@@ -198,21 +198,19 @@ class Hessian:
 			
 			# And then *add* it to the diagnual
 			self.Hessian[3*j:(3*j+3),3*j:(3*j+3)]+=Hjidiag/mj
+		
+			# add a very small, diagonal bit to stabilise zero modes. Normalise by standard units
+			self.Hessian[range(3*self.N),range(3*self.N)]+=stabilise*self.eigscale
+			favx/=self.ncon
+			favy/=self.ncon
+			frotav/=self.ncon
+			#print ("Hessian: Estimating distance from mechanical equilibrium of initial configuration ")
 			
-
-
-                # add a very small, diagonal bit to stabilise zero modes. Normalise by standard units
-                self.Hessian[range(3*self.N),range(3*self.N)]+=stabilise*self.eigscale
-                favx/=self.ncon
-                favy/=self.ncon
-                frotav/=self.ncon
-                #print "Hessian: Estimating distance from mechanical equilibrium of initial configuration "
-                
-                if verbose:
-                    # This bit is commented since it eats up 10 gigs of memory for experimental-size Hessians
-                    #plt.figure()
-                    #plt.pcolor(self.Hessian)
-                    print "Scaled force sum is x:" + str(favx) + "  y:" + str(favy) + " rot:" + str(frotav)
+			if verbose:
+				# This bit is commented since it eats up 10 gigs of memory for experimental-size Hessians
+				#plt.figure()
+				#plt.pcolor(self.Hessian)
+				print ("Scaled force sum is x:" + str(favx) + "  y:" + str(favy) + " rot:" + str(frotav))
 
 
         ## ==== Diagonalisation routine, with optional eigenvalue plotting ====
@@ -223,7 +221,7 @@ class Hessian:
 		HessianSym=0.5*(self.Hessian+np.transpose(self.Hessian))
 		# Use routines for hermitian eigenvector decomposition
 		# Default is ascending order, which suits us
-		print "Starting Diagonalisation!"
+		print ("Starting Diagonalisation!")
 		self.eigval, self.eigvec = LA.eigh(HessianSym)
 		if debug:
 			# start with some debugging output
@@ -233,9 +231,9 @@ class Hessian:
 			plt.xlabel('rank')
 			plt.ylabel('eigenvalue')
 			plt.title('Eigenvalues of the Hessian')
-        
-        ##=============== Diagnostic output =============================================
-        # Debugging output to check on usepts modes
+	
+	##=============== Diagnostic output =============================================
+	# Debugging output to check on usepts modes
 	def plotModes(self,usepts):
 		for u in usepts:
 			plt.figure()
@@ -246,8 +244,8 @@ class Hessian:
 			wrot=np.sum(self.eigvec[2:3*self.N:3,u]**2)
 			plt.title('mode #' + str(u) + ', eigval ' + str(self.eigval[u])+ ' ' + str(np.round(wx+wy,2)) + ' trans, ' + str(np.round(wrot,2)) + ' rot.' )
 
-        # first indication if any of the large displacement regions make sense
-        # purely qualiative, use correlation plots in Analysis to do this properly
+	# first indication if any of the large displacement regions make sense
+	# purely qualiative, use correlation plots in Analysis to do this properly
 	def plotZeroModes(self,thresh=2e-8,simple=True):
 		if simple:
 			nzero=0
@@ -265,13 +263,13 @@ class Hessian:
 			plt.title('Location of ' + str(nzero)+' zero eigenmodes')
 			plt.gca().axis('scaled')
 			if self.conf.datatype=='simulation':
-                                plt.xlim(-self.conf.Lx/2,self.conf.Lx/2)
-                                plt.ylim(-self.conf.Ly/2,self.conf.Ly/2)
-                        elif self.conf.datatype=='experiment':
-                                xmin=np.amin(self.conf.y)-20
-                                ymin=np.amin(self.conf.x)-20
-                                plt.xlim(xmin,xmin+self.conf.Lx+40)
-                                plt.ylim(ymin,ymin+self.conf.Ly+40)
+				plt.xlim(-self.conf.Lx/2,self.conf.Lx/2)
+				plt.ylim(-self.conf.Ly/2,self.conf.Ly/2)
+			elif self.conf.datatype=='experiment':
+				xmin=np.amin(self.conf.y)-20
+				ymin=np.amin(self.conf.x)-20
+				plt.xlim(xmin,xmin+self.conf.Lx+40)
+				plt.ylim(ymin,ymin+self.conf.Ly+40)
 		else:
 			for u in range(3*self.N):
 				if self.eigval[u]<thresh*self.eigscale:
@@ -287,7 +285,7 @@ class Hessian:
 	## =========================== Analysis helper functions ===================================
 	# Computes total displacements of modes below threshold, based on particles
 	def ModeThresh(self,thresh):	
-                # Level 0: threshold on square displacements on particle (particle clusters)
+		# Level 0: threshold on square displacements on particle (particle clusters)
 		self.nzero=0
 		eigx=np.zeros((self.N,))
 		eigy=np.zeros((self.N,))
@@ -306,9 +304,9 @@ class Hessian:
 		self.isrigid=[index for index,value in enumerate(eigx+eigy+eigr) if value<thresh*self.eigscale]
 		self.notrigid=[x for x in range(self.N) if x not in self.isrigid]
 		
-         
-        # Decompose zero modes onto normal translations, tangential translations, rotations and sliding
-        def ModeContacts(self):
+		
+	# Decompose zero modes onto normal translations, tangential translations, rotations and sliding
+	def ModeContacts(self):
 		# Level 1: Work with relative displacements. That still leaves global rotations possible
 		# Start to work on contacts
 		# normal, tangential and rotational (eff sliding for a little, look for gearing in a bit)
@@ -330,7 +328,7 @@ class Hessian:
 			eigr[k] = np.sum((self.eigvec[3*j+2,self.iszero]+self.eigvec[3*i+2,self.iszero])**2)/self.nzero
 			# gearing
 			eiggear[k]=np.sum(((self.eigvec[3*j,self.iszero]-self.eigvec[3*i,self.iszero])*tx0+(self.eigvec[3*j+1,self.iszero]-self.eigvec[3*i+1,self.iszero])*ty0-(self.eigvec[3*i+2,self.iszero]+self.eigvec[3*j+2,self.iszero]))**2)/self.nzero # note dimensions of rotational modes are lengths now, with precisely the radii as scale factors
-                return eign, eigt, eigr, eiggear
+		return eign, eigt, eigr, eiggear
 
 
 
