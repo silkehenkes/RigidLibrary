@@ -83,31 +83,32 @@ for experiment in experiment_nums:
                         fig1 = ThisAnalysis.plotStresses(True,False,False,True,False)
                         #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):
                         #ThisAnalysis.plotPebbles(True,True,True,False,False)
-                        fig2 = ThisAnalysis.plotPebbles(True,True,False,True,False)
+                        fig2 = ThisAnalysis.plotPebbles(True,True,True,False,False)
+                        fig3 = ThisAnalysis.plotPebbles(True,True,False,True,False)
                         
                         
                         ######### continuing with the Hessian now 
                         # constructing the matrix
                         #  makeHessian(self,frictional,recomputeFnor,stabilise,verbose=False):
-                        ThisHessian.makeHessian(True,False,0,False)
+                        #ThisHessian.makeHessian(True,False,0,False)
                         # diagonalising the matrix
                         # def getModes(self,debug=False):
-                        ThisHessian.getModes(False)
+                        #ThisHessian.getModes(False)
                         
                         ##### a couple of checks on the modes (optional)
                         #plotModes(self,usepts):
                         #usepts=[3*ThisConf.N-5,3*ThisConf.N-4,3*ThisConf.N-3,3*ThisConf.N-2,3*ThisConf.N-1]
                         #ThisHessian.plotModes(usepts)
                         #plotZeroModes(self,thresh=2e-8,simple=True):
-                        ThisHessian.plotZeroModes()
+                        #ThisHessian.plotZeroModes()
                         
                         ############ Now look for the cross-correlations
                         # what is rigid according to modes with a given threshold:
-                        fig3 = ThisAnalysis.ModeClusters('translations',2e-4)
+                        #fig3 = ThisAnalysis.ModeClusters('translations',2e-4)
                         # how this cross-correlates to rigidy according to pebbles:
-                        P_eig_if_pebble,P_pebble_if_eig,fig5 = ThisAnalysis.RigidModesCorrelate(2e-4)
+                        #P_eig_if_pebble,P_pebble_if_eig,fig5 = ThisAnalysis.RigidModesCorrelate(2e-4)
                         # These are the conditional probabilities of being rigid by mode while being rigid by pebble and the reverse
-                        print (P_eig_if_pebble,P_pebble_if_eig)
+                        #print (P_eig_if_pebble,P_pebble_if_eig)
                         # if there is a next data set
                         # Needs revision in any case, don't use for now
                         #if ThisConf.Nnext>0:
