@@ -280,7 +280,7 @@ class Pebbles:
                 u = self.Ifull[c]
             if marked[u] == False:
                 seen = -1*np.zeros((self.N,)) > 0
-                path = -1*np.zeros((self.N,), dtype=np.int)
+                path = -1*np.zeros((self.N,), dtype=int)
                 found = self.find_pebble2(
                     pebblescopy, int(u), seen, path, marked, rigid)
                 # if a pebble is found, mark all those sites as floppy
@@ -464,7 +464,7 @@ class Pebbles:
     # attempt adding an edge. The contact info is in pbcopy
     def enlarge_cover(self, pbcopy, i, j):
         seen = -1*np.zeros((self.N,)) > 0
-        path = -1*np.zeros((self.N,), dtype=np.int)
+        path = -1*np.zeros((self.N,), dtype=int)
         found = self.find_pebble(pbcopy, i, seen, path)
         ## print ('looked for pebble along i; result is: ' + str(found))
         if found:
@@ -484,7 +484,7 @@ class Pebbles:
     # Cousin to mark overconstrained
     def enlarge_over(self, pbcopy, marked, i, j):
         seen = -1*np.zeros((self.N,)) > 0
-        path = -1*np.zeros((self.N,), dtype=np.int)
+        path = -1*np.zeros((self.N,), dtype=int)
         found = self.find_pebble(pbcopy, i, seen, path)
         ## print ('looked for pebble along i; result is: ' + str(found))
         if (not found):

@@ -3,8 +3,8 @@ import sys, os, glob
 
 
 # Location of the library files: insert into python path
-pebblepath='/home/sh18581/Documents/Friction/RigidLibrary/'
-sys.path.insert(1,pebblepath)
+#pebblepath='/home/sh18581/Documents/Friction/RigidLibrary/'
+#sys.path.insert(1,pebblepath)
 
 # Load pebble game and dynamical matrix libraries
 import Configuration as CF
