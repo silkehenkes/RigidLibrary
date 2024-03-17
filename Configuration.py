@@ -15,7 +15,8 @@ class Configuration:
         
         #=================== Create a new configruation ===============
         # Current choices: either simulation or experimental through datatype. Parameters are either read (simulation) or passed to the configuration via optional arguments (experiment)
-        def __init__(self,folder,datatype,mu0=0.2,prefix10='DSC',prefix20='_solved_Tracke_'):
+        #def __init__(self,folder,datatype,mu0=0.2,prefix10='DSC',prefix20='_solved_Tracke_'):
+        def __init__(self, folder, datatype, mu0, strainstep):
             self.folder = folder
             self.datatype=datatype
             # These get set to true if add boudary functions are called
@@ -36,9 +37,10 @@ class Configuration:
                 self.height=1.0
                 self.width=1.0
             elif (datatype=='experiment_square'):
-                print ("Reading experimental data!")
-                self.prefix1=prefix10
-                self.prefix2=prefix20 
+                print ("Reading experimental data on square!")
+                self.step = strainstep
+                self.prefix1='DSC'
+                self.prefix2='_solved_Tracke_'
                 self.mu=mu0
                 # Experimental data does not have periodic boundary conditions and there is no angle data either
                 self.periodic=False
@@ -54,6 +56,7 @@ class Configuration:
                 # boundary width
                 self.width=20e-3
             elif (datatype == 'experiment_annulus'):
+                print ("Reading experimental data on annulus!")
                 #Radius of the inner ring in experiment
                 self.R1 = 1548
                 #Radius of the outer ring in experiment
@@ -109,7 +112,7 @@ class Configuration:
                 parfile.close()
                 self.Lx=self.L 
                 self.Ly=self.L
-                self.rad=sp.loadtxt(folder +'posinit.dat',usecols=(3,))
+                self.rad=np.loadtxt(folder +'posinit.dat',usecols=(3,))
 
         #######========== Simulation data read-in ================== 
         # snap is the label, and distSnapshot tells me how many time units they are apart (in actual time, not steps)
@@ -124,7 +127,7 @@ class Configuration:
                         print('xi=' + str(self.xi))
                         print('phi=' + str(self.phi))
                         print('strain=' + str(self.strain))
-                filename=foldername + '/PosVel' + str(snap) + '.dat'
+                filename=self.folder + '/PosVel' + str(snap) + '.dat'
                 if (self.verbose):
                         print(filename)
                 isPosdata=False
@@ -145,15 +148,16 @@ class Configuration:
                         self.alpha=0.0
                         self.N=0
                 else:
-                        self.x=data[0,:]
-                        self.y=data[1,:]
-                        self.alpha=data[2,:]
-                        self.dx=data[3,:]
-                        self.dy=data[4,:]
-                        self.dalpha=data[5,:]
+                        self.x = data[:,0]
+                        self.y = data[:,1]
+                        self.alpha = data[:,2]
+                        self.dx = data[:,3]
+                        self.dy = data[:,4]
+                        self.dalpha = data[:,5]
+                        print(self.x)
                         del data
                 
-                filename=foldername + '/Contact' + str(snap) + '.dat'
+                filename=self.folder + '/Contact' + str(snap) + '.dat'
                 if (self.verbose):
                         print(filename)
                 isCondata=False
@@ -174,13 +178,13 @@ class Configuration:
                         self.Jfull=-1
                 else:
                         self.noConf=False
-                        self.I=list(data[0,:].astype(int))
-                        self.J=list(data[1,:].astype(int))
-                        self.fullmobi=data[4,:].astype(int)
-                        self.nx=data[2,:]
-                        self.ny=data[3,:]
-                        self.fnor=data[5,:]
-                        self.ftan=data[6,:]+data[7,:]
+                        self.I=list(data[:,0].astype(int))
+                        self.J=list(data[:,1].astype(int))
+                        self.fullmobi=data[:,4].astype(int)
+                        self.nx=data[:,2]
+                        self.ny=data[:,3]
+                        self.fnor=data[:,5]
+                        self.ftan=data[:,6]+data[:,7]
                         del data
                         self.x-=self.L*np.round(self.x/self.L)
                         self.y-=self.L*np.round(self.y/self.L)

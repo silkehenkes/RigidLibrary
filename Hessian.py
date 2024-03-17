@@ -59,7 +59,7 @@ class Hessian:
 			Aj = 1.0/2**0.5
 			# The boundary particle is always i, per construction (see configuration)
 			# see notes for detailed scaling 
-			if self.conf.addBoundary:
+			if self.conf.addBoundarySquare or self.conf.addBoundaryAnnulus:
 				if (i in self.conf.bindices):
 					mi = self.conf.density*self.conf.height*self.conf.width*self.conf.rconversion*0.5*(self.conf.Lx+self.conf.Ly)
 					Ai = (12.0*mrad**2/((0.5*(self.conf.Lx+self.conf.Ly))**2+(2*mrad)**2))**0.5

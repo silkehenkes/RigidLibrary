@@ -73,8 +73,8 @@ for experiment in experiment_nums:
                         ThisHessian = HS.Hessian(ThisConf)
                         
                         ########## Have a look at some analysis functions of the rigid clusters
-                        #def __init__(self,conf0,pebbles0,hessian0,verbose=False):
-                        ThisAnalysis=AN.Analysis(ThisConf,ThisPebble,ThisHessian,0.01,False)
+                        #ddef __init__(self,conf0,pebbles0,hessian0,tiling0='skip',fgiven0=0.001,verbose0=False):
+                        ThisAnalysis=AN.Analysis(ThisConf,ThisPebble,ThisHessian,'skip',0.01,False)
                         # stress statistics
                         zav,nm,pres,fxbal,fybal,torbal,mobin,mohist,sxx,syy,sxy,syx=ThisAnalysis.getStressStat()
                         # cluster statistics

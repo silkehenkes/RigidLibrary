@@ -1,0 +1,19 @@
+README for Sample data 230502
+
+Data taken 230502
+
+10Hz_1fps_Img00*.tif is the original image as taken by the camera
+100Hz_1fps_Img00*warped.tif is the transformed image following the distortion
+100Hz_1fps_Img00*warped_solved.mat-Synth.jpg shows the reconstructed image output by the force solving matrix
+
+Particle locations and radii are contained in centers_tracked.txt in the format of for the warped image
+frame number, particleID, x, y, r, edge particle status
+
+edge particle status is given as -1 if it is in contact with the inner boundary, 1 if in contact with outer boundary and 0 if not in contact with a boundary
+
+Original locations are contained in the same format as the above but following the original unwarped image
+frame number, particleID, x, y, r, edge particle status
+
+
+Adjacency_list.txt contains force data in the format of
+frame, particleID1, particleID2, tangentia,l normal
