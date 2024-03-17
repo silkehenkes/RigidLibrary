@@ -39,7 +39,7 @@ for experiment in experiment_nums:
                 print (foldername)
                 # Create a new configuratin; the data in there will get replaced every time we read a new configuration
                 #def __init__(self,folder,datatype,mu0=0.2,prefix10='DSC',prefix20='_solved_Tracke_'):
-                ThisConf = CF.Configuration(foldername,'experiment',mu,prefix1,prefix2)
+                ThisConf = CF.Configuration(foldername,'experiment_square',mu,prefix1,prefix2)
                 # And finally loop over strain steps for a given experiment
                 for u in range(nsteps-1):
                         ########## Reading in the configuration and the next step
@@ -48,8 +48,8 @@ for experiment in experiment_nums:
                         numlabel = "%05d" %numlabel0
                         print(numlabel)
                         #def ReadExpdata(self,numlabel,scale=False):
-                        ThisConf.ReadExpdata(numlabel)
-                        ThisConf.AddBoundaryContacts()
+                        ThisConf.ReadExpdataSquare(numlabel)
+                        ThisConf.AddBoundaryContactsSquare()
                         # also read in the next data at this point: dlabel further along in the numbering 
                         # Revise at a later stage.
                         #def ReadExpdataNext(self,numlabel,scale=False):
