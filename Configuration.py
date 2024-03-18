@@ -130,14 +130,14 @@ class Configuration:
                 filename=self.folder + '/PosVel' + str(snap) + '.dat'
                 if (self.verbose):
                         print(filename)
-                isPosdata=False
+                self.isPosdata=False
                 # Only if: 1) The file exists 2) is not empty 
                 try:
                         data=np.loadtxt(filename)
                         if (len(data.shape)>1):
-                                isPosdata=True	
+                                self.isPosdata=True	
                 except:
-                        isPosdata=False
+                        pass
                         
                 if (not isPosdata):
                         print('error: no position data at snapshot' + str(snap))
@@ -160,15 +160,15 @@ class Configuration:
                 filename=self.folder + '/Contact' + str(snap) + '.dat'
                 if (self.verbose):
                         print(filename)
-                isCondata=False
+                self.isCondata=False
                 # Only if: 1) The file exists 2) is not empty 3) is longer than 1 contact (garbage avoiding device .. hope for the best. Some of these got cut off mid-writing)
                 try:
                         data=np.loadtxt(filename)
                         if (len(data.shape)>1):
-                                isCondata=True	
+                                self.isCondata=True	
                 except:
-                        isCondata=False
-                if ((not isCondata) or (not isPosdata)):
+                        pass
+                if ((not self.isCondata) or (not self.isPosdata)):
                         print('error: no position data at snapshot' + str(snap))
                         self.noConf=True
                         self.I=-1
@@ -193,6 +193,7 @@ class Configuration:
        
         def ReadExpdataAnnulus(self, verbose):    
                 prefix = self.folder +'/particle_positions.txt'
+                self.isPosdata=True
                 try:
                     coords=np.loadtxt(prefix, delimiter=',')
                     coords=coords[coords[:,0] == self.step]
@@ -207,7 +208,7 @@ class Configuration:
                     self.Ly=np.amax(self.y)-np.amin(self.y)
                     del coords
                 except:
-                    isPosdata=False
+                    self.isPosdata=False
                     self.x=0
                     self.y=0
                     self.rad=1 # purely so that we can divide by it ...
@@ -215,11 +216,12 @@ class Configuration:
                     print("Error: there is no position data here")
                 #Load in contact data
                 prefix = self.folder +'/Adjacency_list.txt'
+                self.isCondata=True
                 try:
                     condata=np.loadtxt(prefix, delimiter=',')
                     condata=condata[condata[:,0] == self.step]
                 except:
-                    isCondata=False
+                    self.isCondata=False
                     print ("Error: there is no contact data here")
                     return 1
                 
@@ -288,7 +290,7 @@ class Configuration:
                 prefix = self.prefix1 + numlabel + self.prefix2
                 print ("Starting analysis of experimental step " + prefix)
                 # Let's get the positions first
-                isPosdata=True
+                self.isPosdata=True
                 print (self.folder+prefix + 'ParticleData.dlm')
                 try:
                     coords=np.loadtxt(self.folder+prefix + 'ParticleData.dlm',delimiter=',')
@@ -300,7 +302,7 @@ class Configuration:
                     self.Ly=np.amax(self.y)-np.amin(self.y)
                     del coords
                 except:
-                    isPosdata=False
+                    self.isPosdata=False
                     self.x=0
                     self.y=0
                     self.rad=1 # purely so that we can divide by it ...
@@ -309,17 +311,17 @@ class Configuration:
                 
                 # The contact data lives in the adjacency matrices
                 # As non-sparse N by N matrices (!)
-                isCondata=True
+                self.isCondata=True
                 try:
                     contacts=np.loadtxt(self.folder+prefix+'BinaryAdjacencyMatrix.dlm',delimiter=',')
                     fnor0=np.loadtxt(self.folder+prefix+'NormWeightedAdjacencyMatrix.dlm',delimiter=',')
                     ftan0=np.loadtxt(self.folder+prefix+'TanWeightedAdjacencyMatrix.dlm',delimiter=',')
                 except:
-                    isCondata=False
+                    self.isCondata=False
                     print ("Error: there is no contact data here")
                     return 1
                     
-                if isCondata:
+                if self.isCondata:
                     self.I=[]
                     self.J=[]
                     fn0=[]
@@ -395,12 +397,12 @@ class Configuration:
 
         # same kind of procedure, but get only the next positions and don't redefine things
         # This is for comparison of the displacements compared to the the next dataset to pebbles and modes
-        def ReadExpdataNext(self,numlabel,scale=False):
+        def ReadExpdataNextSquare(self,numlabel,scale=False):
             
                 prefix = self.prefix1 + numlabel + self.prefix2
                 print ("Reading experimental step " + prefix + " as next data set.")
                 # Let's get the positions first
-                isPosdata=True
+                self.isPosdataNext=True
                 try:
                     coords=np.loadtxt(self.folder+prefix + 'ParticleData.dlm',delimiter=',')
                     self.xnext=coords[:,1]
@@ -411,7 +413,7 @@ class Configuration:
                     self.Lynext=np.amax(self.y)-np.amin(self.y)
                     del coords
                 except:
-                    isPosdata=False
+                    self.isPosdataNext=False
                     self.xnext=0
                     self.ynext=0
                     self.radnext=1 # purely so that we can divide by it ...
@@ -628,7 +630,7 @@ class Configuration:
             print ("Added boundaries!")
 
 
-        def AddNextBoundaryContacts(self,threshold=15,Brad=20.0):
+        def AddNextBoundaryContactsSquare(self,threshold=15,Brad=20.0):
             # Threshold to check if a particle is close enough to walls.
             upidx=np.argmax(self.ynext)
             downidx=np.argmin(self.ynext)
@@ -796,7 +798,7 @@ class Configuration:
         ##================ Finally, pure helper functions: positions of both ends of a contact ===============
         # get the cleaned up, periodic boundary conditions sorted out positions corresponding to two ends of a contact. 
         # Basic plotting helper function
-        def getConPos(self,k):
+        def getConPos(self,k,nobound=False):
                 x0=self.x[self.I[k]]
                 x1=self.x[self.J[k]]
                 y0=self.y[self.I[k]]
@@ -808,41 +810,42 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
-                if self.addBoundarySquare:
-                    ival=self.I[k]
-                    if ((ival==self.bindices[0]) or (ival==self.bindices[1])): #top or bottom
-                        x0=x1
-                    if ((ival==self.bindices[2]) or (ival==self.bindices[3])): #left or right
-                        y0=y1
-                if self.addBoundaryAnnulus:
-                    ival=self.I[k]
-                    l = 100 #Length in pixels of the contacts with the boundary
-                    #If in contact with the inner boundary
-                    if (ival==self.bindices[0]):
-                        #Compute position vector from midpoint
-                        r = np.array([x1-self.mid_x, y1-self.mid_y])
-                        #Compute length of r
-                        r_len = np.linalg.norm(r)
-                        #Compute angle between position vector from midpoint and (1,0) vector
-                        ang = np.arctan2(r[1], r[0])
-                        #Compute coordinates of outward inward coordinates
-                        x0 = self.mid_x + (r_len - l)*np.cos(ang)
-                        y0 = self.mid_y + (r_len - l)*np.sin(ang)
-                    #If in contact with the outer boundary 
-                    if (ival==self.bindices[1]):
-                        #Compute position vector from midpoint
-                        r = np.array([x1-self.mid_x, y1-self.mid_y])
-                        #Compute length of r
-                        r_len = np.linalg.norm(r)
-                        #Compute angle between position vector from midpoint and (1,0) vector
-                        ang = np.arctan2(r[1], r[0])
-                        #Compute coordinates of outward pointing coordinates
-                        x0 = self.mid_x + (r_len + l)*np.cos(ang)
-                        y0 = self.mid_y + (r_len + l)*np.sin(ang)
+                if not nobound:
+                    if self.addBoundarySquare:
+                        ival=self.I[k]
+                        if ((ival==self.bindices[0]) or (ival==self.bindices[1])): #top or bottom
+                            x0=x1
+                        if ((ival==self.bindices[2]) or (ival==self.bindices[3])): #left or right
+                            y0=y1
+                    if self.addBoundaryAnnulus:
+                        ival=self.I[k]
+                        l = 100 #Length in pixels of the contacts with the boundary
+                        #If in contact with the inner boundary
+                        if (ival==self.bindices[0]):
+                            #Compute position vector from midpoint
+                            r = np.array([x1-self.mid_x, y1-self.mid_y])
+                            #Compute length of r
+                            r_len = np.linalg.norm(r)
+                            #Compute angle between position vector from midpoint and (1,0) vector
+                            ang = np.arctan2(r[1], r[0])
+                            #Compute coordinates of outward inward coordinates
+                            x0 = self.mid_x + (r_len - l)*np.cos(ang)
+                            y0 = self.mid_y + (r_len - l)*np.sin(ang)
+                        #If in contact with the outer boundary 
+                        if (ival==self.bindices[1]):
+                            #Compute position vector from midpoint
+                            r = np.array([x1-self.mid_x, y1-self.mid_y])
+                            #Compute length of r
+                            r_len = np.linalg.norm(r)
+                            #Compute angle between position vector from midpoint and (1,0) vector
+                            ang = np.arctan2(r[1], r[0])
+                            #Compute coordinates of outward pointing coordinates
+                            x0 = self.mid_x + (r_len + l)*np.cos(ang)
+                            y0 = self.mid_y + (r_len + l)*np.sin(ang)
                 return x0,x1,y0,y1
         
         # same, but based on existing particle labels (in case those come from elsewhere)
-        def getConPos2(self,k1,k2):
+        def getConPos2(self,k1,k2,nobound=False):
                 x0=self.x[k1]
                 x1=self.x[k2]
                 y0=self.y[k1]
@@ -854,36 +857,37 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
-                if self.addBoundarySquare:
-                    if ((k1==self.bindices[0]) or (k1==self.bindices[1])): #top or bottom
-                        x0=x1
-                    if ((k1==self.bindices[2]) or (k1==self.bindices[3])): #left or right
-                        y0=y1
-                if self.addBoundaryAnnulus:
-                    l = 100 #Length in pixels of the contacts with the boundary
-                    if (k1==self.bindices[0] and k2==self.bindices[1]) or (k1==self.bindices[1] and k2==self.bindices[0]):
-                       return x0,x1,y0,y1
-                    #If in contact with the inner boundary
-                    if (k1==self.bindices[0]):
-                        #Compute position vector from midpoint
-                        r = np.array([x1-self.mid_x, y1-self.mid_y])
-                        #Compute length of r
-                        r_len = np.linalg.norm(r)
-                        #Compute angle between position vector from midpoint and (1,0) vector
-                        ang = np.arctan2(r[1], r[0])
-                        #Compute coordinates of outward inward coordinates
-                        x0 = self.mid_x + (r_len - l)*np.cos(ang)
-                        y0 = self.mid_y + (r_len - l)*np.sin(ang)
-                    #If in contact with the outer boundary 
-                    if (k1==self.bindices[1]):
-                        #Compute position vector from midpoint
-                        r = np.array([x1-self.mid_x, y1-self.mid_y])
-                        #Compute length of r
-                        r_len = np.linalg.norm(r)
-                        #Compute angle between position vector from midpoint and (1,0) vector
-                        ang = np.arctan2(r[1], r[0])
-                        #Compute coordinates of outward pointing coordinates
-                        x0 = self.mid_x + (r_len + l)*np.cos(ang)
-                        y0 = self.mid_y + (r_len + l)*np.sin(ang)
+                if not nobound:
+                    if self.addBoundarySquare:
+                        if ((k1==self.bindices[0]) or (k1==self.bindices[1])): #top or bottom
+                            x0=x1
+                        if ((k1==self.bindices[2]) or (k1==self.bindices[3])): #left or right
+                            y0=y1
+                    if self.addBoundaryAnnulus:
+                        l = 100 #Length in pixels of the contacts with the boundary
+                        if (k1==self.bindices[0] and k2==self.bindices[1]) or (k1==self.bindices[1] and k2==self.bindices[0]):
+                            return x0,x1,y0,y1
+                        #If in contact with the inner boundary
+                        if (k1==self.bindices[0]):
+                            #Compute position vector from midpoint
+                            r = np.array([x1-self.mid_x, y1-self.mid_y])
+                            #Compute length of r
+                            r_len = np.linalg.norm(r)
+                            #Compute angle between position vector from midpoint and (1,0) vector
+                            ang = np.arctan2(r[1], r[0])
+                            #Compute coordinates of outward inward coordinates
+                            x0 = self.mid_x + (r_len - l)*np.cos(ang)
+                            y0 = self.mid_y + (r_len - l)*np.sin(ang)
+                        #If in contact with the outer boundary 
+                        if (k1==self.bindices[1]):
+                            #Compute position vector from midpoint
+                            r = np.array([x1-self.mid_x, y1-self.mid_y])
+                            #Compute length of r
+                            r_len = np.linalg.norm(r)
+                            #Compute angle between position vector from midpoint and (1,0) vector
+                            ang = np.arctan2(r[1], r[0])
+                            #Compute coordinates of outward pointing coordinates
+                            x0 = self.mid_x + (r_len + l)*np.cos(ang)
+                            y0 = self.mid_y + (r_len + l)*np.sin(ang)
                 return x0,x1,y0,y1
         

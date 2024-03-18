@@ -11,6 +11,7 @@ import Configuration as CF
 import Pebbles as PB
 import Hessian as HS
 import Analysis as AN
+import Holes as HO
 
 import matplotlib.pyplot as plt
 
@@ -28,8 +29,9 @@ dlabel=2
 nsteps=2
 #nsteps=2
 # explicit prefixes: These are the default values, so not necessary here unless this changes
-prefix1='DSC'
-prefix2='_solved_Tracke_'
+# now hardcoded as this is archived data, pretty much
+#prefix1='DSC'
+#prefix2='_solved_Tracke_'
 
 # Loop over experiment
 for experiment in experiment_nums:

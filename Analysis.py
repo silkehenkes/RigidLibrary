@@ -474,7 +474,7 @@ class Analysis:
                 
     
     # ================ Compute which bits of the clusters are rigid, as per normal modes ==========
-    def ModeClusters(self,mode,thresh):
+    def ModeClusters(self,mode,thresh=2e-5):
         # Attempt to identify rigid clusters by several methods
         fig=plt.figure()
         axval=fig.add_subplot(1, 1, 1)
@@ -553,63 +553,71 @@ class Analysis:
     
     # ========== Correlation between pebble rigidity and modes, with optional plot ========= 
     def RigidModesCorrelate(self,thresh,plotDisp=True):
-        # Correlations
+    # Correlations
+        fig=plt.figure()
         Corr_PGDM=np.zeros(4)
+        P_eig_if_pebble=0
+        P_pebble_if_eig=0
         # Compute correlations between being part of a rigid cluster and contact displacements
         eign, eigt, eigr, eiggear = self.hessian.ModeContacts()
         for k in range(self.ncon):
             if self.pebbles.cluster[k]>-1:
-                    Corr_PGDM[0]+=1.0
-                    if (eigr[k])<thresh and (eign[k]+eigt[k])<thresh:
-                            Corr_PGDM[1]+=1.0
+                Corr_PGDM[0]+=1.0
+                if (eigr[k])<thresh and (eign[k]+eigt[k])<thresh:
+                    Corr_PGDM[1]+=1.0
             if (eigr[k])<thresh and (eign[k]+eigt[k])<thresh:
                     Corr_PGDM[2]+=1.0
                     if self.pebbles.cluster[k]>-1:
                         Corr_PGDM[3]+=1.0
-                        
-            if plotDisp:
-                fig=plt.figure()
-                axval= fig.add_subplot(1, 1, 1)
-                for k in range(self.N):
-                    cir1=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=self.conf.rad[k],ec=(0.7, 0.7, 0.7),fc='none', linewidth=2)
-                    axval.add_patch(cir1)
-                Fcolor,Fmap=self.color_init(5.0)
-                intThresh=np.mean(eign+eigt)
-                for k in range(self.ncon):
-                    fval=np.sqrt((eign[k]+eigt[k])/intThresh)
-                    if fval<0.2:
-                        fval=0.2
-                    x0,x1,y0,y1=self.conf.getConPos(k)
-                    conlink=lne.Line2D([x0,x1],[y0,y1],lw=1.0/fval,color=Fcolor(1.0/fval))
-                    axval.add_line(conlink)
-                axval.axis('scaled')
-                if self.conf.datatype=='simulation':
+                            
+        if plotDisp:
+            axval= fig.add_subplot(1, 1, 1)
+            for k in range(self.N):
+                cir1=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=self.conf.rad[k],ec=(0.7, 0.7, 0.7),fc='none', linewidth=2)
+                axval.add_patch(cir1)
+            Fcolor,Fmap=self.color_init(5.0)
+            intThresh=np.mean(eign+eigt)
+            for k in range(self.ncon):
+                fval=np.sqrt((eign[k]+eigt[k])/intThresh)
+                if fval<0.2:
+                    fval=0.2
+                x0,x1,y0,y1=self.conf.getConPos(k)
+                conlink=lne.Line2D([x0,x1],[y0,y1],lw=1.0/fval,color=Fcolor(1.0/fval))
+                axval.add_line(conlink)
+            axval.axis('scaled')
+            if self.conf.datatype=='simulation':
                     axval.set_xlim(-self.Lx/2,self.Lx/2)
                     axval.set_ylim(-self.Ly/2,self.Ly/2)
-                elif self.conf.datatype=='experiment':
+            elif self.conf.datatype=='experiment':
                     xmin=np.amin(self.conf.x)-20
                     ymin=np.amin(self.conf.y)-20
                     axval.set_xlim(xmin,xmin+self.Lx+120)
                     axval.set_ylim(ymin,ymin+self.Ly+120)
-                plt.title('Relative lack of motion from zero modes')
-                # Conditional probabilities: Eigenvalue rigid when pebble rigid
-            if Corr_PGDM[0]>0:
-                P_eig_if_pebble=Corr_PGDM[1]/Corr_PGDM[0]
-            else:
-                P_eig_if_pebble=0.0
-            if Corr_PGDM[2]>0:
-                P_pebble_if_eig=Corr_PGDM[3]/Corr_PGDM[2]
-            else:
-                P_pebble_if_eig=0.0
-            if plotDisp:
-                return P_eig_if_pebble,P_pebble_if_eig, fig
-            else:
-                return P_eig_if_pebble,P_pebble_if_eig
-        
+            plt.title('Relative lack of motion from zero modes')
+        # Conditional probabilities: Eigenvalue rigid when pebble rigid
+        if Corr_PGDM[0]>0:
+            P_eig_if_pebble=Corr_PGDM[1]/Corr_PGDM[0]
+        else:
+            P_eig_if_pebble=0.0
+        if Corr_PGDM[2]>0:
+            P_pebble_if_eig=Corr_PGDM[3]/Corr_PGDM[2]
+        else:
+            P_pebble_if_eig=0.0
+        if plotDisp:
+            return P_eig_if_pebble,P_pebble_if_eig, fig
+        else:
+            return P_eig_if_pebble,P_pebble_if_eig, fig
+ 
     # ========= Corrlation between displacements and pebble rigidity, with optinal plot ======
     def RigidDisplacementsCorrelate(self,minThresh,plotDisp=True):
         # Correlations
-        Corr_PGDM=np.zeros(4)
+        Corr_PGDP=np.zeros(4)
+        P_disp_if_pebble=0
+        P_pebble_if_disp=0
+        Corr_DPDM=np.zeros(4)
+        P_disp_if_eig=0
+        P_eig_if_disp=0
+        eign, eigt, eigr, eiggear = self.hessian.ModeContacts()
         # Compute correlations between being part of a rigid cluster and contact displacements
         if self.conf.hasAngles:
             disp2n, disp2t, disp2r, disp2gear,intThresh = self.conf.Disp2Contacts(minThresh,True)
@@ -617,38 +625,55 @@ class Analysis:
             disp2n, disp2t, intThresh = self.conf.Disp2Contacts(minThresh,True)
         for k in range(self.ncon):
             if self.pebbles.cluster[k]>-1:
-                Corr_PGDM[0]+=1.0
+                Corr_PGDP[0]+=1.0
                 if self.conf.hasAngles:
                     if (disp2r[k])<intThresh and (disp2n[k]+disp2t[k])<intThresh:
-                        Corr_PGDM[1]+=1.0
+                        Corr_PGDP[1]+=1.0
                 else:
                     if (disp2n[k]+disp2t[k])<intThresh:
-                        Corr_PGDM[1]+=1.0
+                        Corr_PGDP[1]+=1.0
+            if (eigr[k])<minThresh and (eign[k]+eigt[k])<minThresh:
+                Corr_DPDM[0]+=1.0
+                if self.conf.hasAngles:
+                    if (disp2r[k])<intThresh and (disp2n[k]+disp2t[k])<intThresh:
+                        Corr_DPDM[1]+=1.0
+                else:
+                    if (disp2n[k]+disp2t[k])<intThresh:
+                        Corr_DPDM[1]+=1.0
             if self.conf.hasAngles:
                 if (disp2r[k])<intThresh and (disp2n[k]+disp2t[k])<intThresh:
-                    Corr_PGDM[2]+=1.0
+                    Corr_PGDP[2]+=1.0
+                    Corr_DPDM[2]+=1.0
                     if self.pebbles.cluster[k]>-1:
-                        Corr_PGDM[3]+=1.0
+                        Corr_PGDP[3]+=1.0
+                    if (eigr[k])<minThresh and (eign[k]+eigt[k])<minThresh:
+                        Corr_DPDM[3]+=1.0
+
             else:
                 if (disp2n[k]+disp2t[k])<intThresh:
-                    Corr_PGDM[2]+=1.0
+                    Corr_PGDP[2]+=1.0
+                    Corr_DPDM[2]+=1.0
                     if self.pebbles.cluster[k]>-1:
-                        Corr_PGDM[3]+=1.0
+                        Corr_PGDP[3]+=1.0
+                    if (eigr[k])<minThresh and (eign[k]+eigt[k])<minThresh:
+                        Corr_DPDM[3]+=1.0
                                 
         if plotDisp:
             fig=plt.figure()
             axval= fig.add_subplot(1, 1, 1)
             plt.quiver(self.conf.x,self.conf.y,self.conf.dx,self.conf.dy)
             for k in range(self.N):
-                cir1=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=self.conf.rad[k],ec=(0.7, 0.7, 0.7),fc='none', linewidth=2)
+                cir1=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=self.conf.rad[k],ec=(0.65, 0.65, 0.65),fc='none', linewidth=2)
                 axval.add_patch(cir1)
             Fcolor,Fmap=self.color_init(5.0)
             for k in range(self.ncon):
-                fval=np.sqrt((disp2n[k]+disp2t[k])/intThresh)
-                if fval<0.2:
-                    fval=0.2
+                fval=np.log(disp2n[k]+disp2t[k])+3
+                if fval<0.000001:
+                    fval=0.000001
+                if fval>4.999999:
+                    fval=4.999999
                 x0,x1,y0,y1=self.conf.getConPos(k)
-                conlink=lne.Line2D([x0,x1],[y0,y1],lw=1.0/fval,color=Fcolor(1.0/fval))
+                conlink=lne.Line2D([x0,x1],[y0,y1],lw=5-fval,color=Fcolor(5-fval))
                 axval.add_line(conlink)
             axval.axis('scaled')
             if self.conf.datatype=='simulation':
@@ -661,19 +686,28 @@ class Analysis:
                 axval.set_ylim(ymin,ymin+self.Ly+120)
             plt.title('Actual relative lack of motion')
         # Conditional probabilities: Eigenvalue rigid when pebble rigid
-        if Corr_PGDM[0]>0:
-            P_disp_if_pebble=Corr_PGDM[1]/Corr_PGDM[0]
+        if Corr_PGDP[0]>0:
+            P_disp_if_pebble=Corr_PGDP[1]/Corr_PGDP[0]
         else:
             P_disp_if_pebble=0.0
-        if Corr_PGDM[2]>0:
-            P_pebble_if_disp=Corr_PGDM[3]/Corr_PGDM[2]
+        if Corr_PGDP[2]>0:
+            P_pebble_if_disp=Corr_PGDP[3]/Corr_PGDP[2]
         else:
             P_pebble_if_disp=0.0
+
+        if Corr_DPDM[0]>0:
+            P_disp_if_eig=Corr_DPDM[1]/Corr_DPDM[0]
+        else:
+            P_disp_if_eig=0.0
+        if Corr_DPDM[2]>0:
+            P_eig_if_disp=Corr_DPDM[3]/Corr_DPDM[2]
+        else:
+            P_eig_if_disp=0.0
             
         if plotDisp:
-            return P_disp_if_pebble,P_pebble_if_disp, fig
+            return P_disp_if_pebble,P_pebble_if_disp,P_disp_if_eig,P_eig_if_disp, fig
         else:
-            return P_disp_if_pebble,P_pebble_if_disp
+            return P_disp_if_pebble,P_pebble_if_disp,P_disp_if_eig,P_eig_if_disp
         
     # ==== Computes D2min, and plots it together with the rigid cluster ===
     # At this point unclear if it is a useful measure ...
