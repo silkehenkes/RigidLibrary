@@ -130,6 +130,19 @@ class Pebbles:
         print('Number of free pebbles: ' + str(self.freepeb))
         print('Number of failed contacts: ' + str(self.fail))
 
+    # Particles par of the largest rigid cluster
+    def MaxRigidPos(self):
+        #self.pcluster # list of list of labels of rigid clusters particles are part of
+        #self.maxidx # label of largest rigid cluster
+        maxlabels=[]
+        counter=0
+        for lillist in self.pcluster:
+            if len(lillist)>0:
+                if int(lillist[0])==self.maxidx:
+                    maxlabels.append(counter)
+            counter+=1
+        return maxlabels
+
     # ============================= Rigid clusters =======================================
     # Problem was the wrong percolation algorithm. Following Jacobs and Hendrickson, only one round is necessary
     # since by construction, every rigid site is found in the pebble search eventually (OR NOT?)
@@ -348,7 +361,7 @@ class Pebbles:
                             if self.cluster[c] > -1 and self.cluster[c] != self.cidx:
                                 print(
                                     "WARNING!! Attempting to relabel a *bond* from " + str(self.cluster[c]))
-                                return self.cluster[c]
+                                return int(self.cluster[c])
                         self.cluster[c] = self.cidx
                         if self.verbose:
                             print('Added bond ' + str(c) +
