@@ -361,7 +361,7 @@ class Pebbles:
                             if self.cluster[c] > -1 and self.cluster[c] != self.cidx:
                                 print(
                                     "WARNING!! Attempting to relabel a *bond* from " + str(self.cluster[c]))
-                                return self.cluster[c]
+                                return int(self.cluster[c])
                         self.cluster[c] = self.cidx
                         if self.verbose:
                             print('Added bond ' + str(c) +
