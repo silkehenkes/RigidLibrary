@@ -68,6 +68,7 @@ class Analysis:
         self.J = self.conf.J
         self.fn = self.conf.fnor
         self.ft = self.conf.ftan
+        self.fullmobi = self.conf.fullmobi
         self.ftot = np.sqrt(np.square(self.fn)+np.square(self.ft)) #Use this for color scheme forces?
         if self.tiling != 'skip':
             self.tiles = self.tiling.tiles
@@ -79,8 +80,10 @@ class Analysis:
                 self.small = 12.0
         elif self.conf.datatype == 'simulation':
                 self.small = 0.2
+        elif self.conf.datatype =='lattice':
+            self.small = 0.1
         else:
-                self.small = 5.0
+            self.small = 0.2
 
     
     # ====== Color helper function, essentially give jet color map in a convenient form ====

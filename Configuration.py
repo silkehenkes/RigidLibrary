@@ -36,6 +36,41 @@ class Configuration:
                 self.rconversion = 1.0
                 self.height=1.0
                 self.width=1.0
+            elif (datatype=='lattice'):
+                print ("Reading lattic data!")
+                # Use mu to do the boundary condition ...
+                self.periodic=False
+                if mu0 =='open':
+                     self.periodic=False
+                     print('open lattice')
+                elif mu0 =='xy':
+                     self.periodic=True
+                     print('xy periodic lattice')
+                elif mu0 =='x':
+                    self.periodicx = True
+                    self.periodicy = False
+                    print('x periodic lattice')
+                elif mu0 =='y':
+                    self.periodicy = True
+                    self.periodicx = False
+                    print('y periodic lattice')
+                else:
+                     self.periodic = False
+                # and the system size in strainstep (oops)
+                nhex = strainstep
+                self.Lx = nhex*np.sqrt(3)
+                self.Ly = nhex*1.5
+                # self.periodic=True
+                self.hasAngles=False
+                # basis for mass computations
+                self.density = 1.0
+                # Prefactor of the stiffness coefficients
+                self.stiffness = 1.0
+                # radius conversion factor
+                self.rconversion = 1.0
+                self.height=1.0
+                self.width=1.0
+                self.strain=0.0
             elif (datatype=='experiment_square'):
                 print ("Reading experimental data on square!")
                 self.step = strainstep
@@ -86,7 +121,7 @@ class Configuration:
                 self.experiment = True
             else:
                 print ("Error: Unknown type of data! Doing nothing.")
-
+             
         #======= Simulation parameter read-in =====================
         # use Parameter read-in as function called by the constructor
         def getParameters(self,folder):
@@ -113,6 +148,68 @@ class Configuration:
                 self.Lx=self.L 
                 self.Ly=self.L
                 self.rad=np.loadtxt(folder +'posinit.dat',usecols=(3,))
+
+        #######=========Lattice data read in ==========
+        def readLatticedata(self,lattice,bc,verbose0):
+            self.verbose=verbose0
+            filename = self.folder +'/particle_positions' + lattice + bc + '.txt'
+            if (self.verbose):
+                print(filename)
+            self.isPosdata=False
+            # Only if: 1) The file exists 2) is not empty 
+            try:
+                data=np.loadtxt(filename, delimiter=',')
+                if (len(data.shape)>1):
+                    self.isPosdata=True	
+            except:
+                pass
+                        
+            if (not self.isPosdata):
+                print('error: no position data')
+                self.x=0.0
+                self.y=0.0
+                self.N=0
+            else:
+                self.x = data[:,1]
+                self.y = data[:,2]
+                self.N = len(self.x)
+                self.rad = 0.5*np.ones((self.N,))
+                del data
+
+            filename = self.folder +'/Adjacency_list' + lattice + bc + '.txt'
+
+            if (self.verbose):
+                print(filename)
+            self.isCondata=False
+            # Only if: 1) The file exists 2) is not empty 3) is longer than 1 contact (garbage avoiding device .. hope for the best. Some of these got cut off mid-writing)
+            try:
+                data=np.loadtxt(filename, delimiter=',')
+                if (len(data.shape)>1):
+                    self.isCondata=True	
+            except:
+                pass
+            if ((not self.isCondata) or (not self.isPosdata)):
+                print('error: no contact data')
+                self.noConf=True
+                self.I=-1
+                self.J=-1
+                self.fullmobi=0
+                self.Ifull=-1
+                self.Jfull=-1
+            else:
+                self.noConf=False
+                self.I=list(data[:,0].astype(int)-1)
+                self.J=list(data[:,1].astype(int)-1)
+                self.fullmobi=data[:,4].astype(int)
+                self.nx=data[:,2]
+                self.ny=data[:,3]
+                self.fnor = 0*self.nx
+                self.ftan = 0*self.nx
+                del data
+            if self.periodic:
+                self.x-=self.Lx*np.round(self.x/self.Lx)
+                self.y-=self.Ly*np.round(self.y/self.Ly)
+            self.ncon=len(self.I)
 
         #######========== Simulation data read-in ================== 
         # snap is the label, and distSnapshot tells me how many time units they are apart (in actual time, not steps)
@@ -810,6 +907,11 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                if self.periodicx:
+                    x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                if self.periodicy:
+                    y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
+                    print('periodic y')
                 if not nobound:
                     if self.addBoundarySquare:
                         ival=self.I[k]
@@ -857,6 +959,11 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                if self.periodicx:
+                    x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                if self.periodicy:
+                    y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
+                    #print('periodic y')
                 if not nobound:
                     if self.addBoundarySquare:
                         if ((k1==self.bindices[0]) or (k1==self.bindices[1])): #top or bottom
