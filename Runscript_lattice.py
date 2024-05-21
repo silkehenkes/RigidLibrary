@@ -15,7 +15,7 @@ import pandas as pd
 import csv 
 
 #topdir='/directory/where/experimental/data/is/located/'
-topdir='./DataLattice'
+topdir='./RigidLibrary/DataLattice'
 
 # experimental friction coefficient
 mu=5
@@ -27,8 +27,9 @@ bc='x'
 #bc='y'
 #bc='xy'
 
+nhex = 100 ########## please put the lattice size
 # Potential loop over multiple lattices
-lattice_nums=['_20by20_']
+lattice_nums=['_'+str(nhex)+'by'+str(nhex)+'_']
 
 # Loop over experiment
 for lattice in lattice_nums:
@@ -46,7 +47,7 @@ for lattice in lattice_nums:
         
         
         #Creating configuration
-        ThisConf = CF.Configuration(topdir,datatype, bc, 20)
+        ThisConf = CF.Configuration(topdir,datatype, bc, nhex)
                 
         #Reading in the data
         ThisConf.readLatticedata(lattice, bc,True)
