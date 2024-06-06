@@ -15,8 +15,7 @@ class Configuration:
         
         #=================== Create a new configruation ===============
         # Current choices: either simulation or experimental through datatype. Parameters are either read (simulation) or passed to the configuration via optional arguments (experiment)
-        #def __init__(self,folder,datatype,mu0=0.2,prefix10='DSC',prefix20='_solved_Tracke_'):
-        def __init__(self, folder, datatype, mu0, strainstep):
+        def __init__(self, folder, datatype, bc='open',nhex1=20, nhex2=20, mu0=0.2, strainstep=0.1):
             self.folder = folder
             self.datatype=datatype
             # These get set to true if add boudary functions are called
@@ -40,26 +39,29 @@ class Configuration:
                 print ("Reading lattic data!")
                 # Use mu to do the boundary condition ...
                 self.periodic=False
-                if mu0 =='open':
+                if bc =='open':
                      self.periodic=False
+                     self.periodicx = False
+                     self.periodicy = False
                      print('open lattice')
-                elif mu0 =='xy':
+                elif bc =='xy':
                      self.periodic=True
+                     self.periodicx = True
+                     self.periodicy = True
                      print('xy periodic lattice')
-                elif mu0 =='x':
+                elif bc =='x':
                     self.periodicx = True
                     self.periodicy = False
                     print('x periodic lattice')
-                elif mu0 =='y':
+                elif bc =='y':
                     self.periodicy = True
                     self.periodicx = False
                     print('y periodic lattice')
                 else:
                      self.periodic = False
                 # and the system size in strainstep (oops)
-                nhex = strainstep
-                self.Lx = nhex*np.sqrt(3)
-                self.Ly = nhex*1.5
+                self.Lx = nhex1*np.sqrt(3)/2
+                self.Ly = nhex2*0.5
                 # self.periodic=True
                 self.hasAngles=False
                 # basis for mass computations
@@ -206,8 +208,9 @@ class Configuration:
                 self.fnor = 0*self.nx
                 self.ftan = 0*self.nx
                 del data
-            if self.periodic:
+            if self.periodicx:
                 self.x-=self.Lx*np.round(self.x/self.Lx)
+            if self.periodicy:
                 self.y-=self.Ly*np.round(self.y/self.Ly)
             self.ncon=len(self.I)
 

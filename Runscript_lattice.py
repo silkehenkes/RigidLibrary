@@ -23,7 +23,7 @@ mu=5
 # Experiment type, for other types please use a different runscript.
 datatype = 'lattice'
 bc='open'
-bc='x' 
+#bc='x' 
 #bc='y'
 #bc='xy'
 
@@ -46,7 +46,8 @@ for lattice in lattice_nums:
         
         
         #Creating configuration
-        ThisConf = CF.Configuration(topdir,datatype, bc, 20)
+        # def __init__(self, folder, datatype, bc='open',nhex1=20, nhex2=20, mu0=0.2, strainstep=0.1):
+        ThisConf = CF.Configuration(topdir,datatype, bc, 20,20)
                 
         #Reading in the data
         ThisConf.readLatticedata(lattice, bc,True)
