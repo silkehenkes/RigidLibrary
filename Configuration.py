@@ -61,7 +61,7 @@ class Configuration:
                      self.periodic = False
                 # and the system size in strainstep (oops)
                 self.Lx = nhex1*np.sqrt(3)/2
-                self.Ly = nhex2*0.5
+                self.Ly = nhex2*1.5
                 # self.periodic=True
                 self.hasAngles=False
                 # basis for mass computations

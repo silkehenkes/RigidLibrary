@@ -384,7 +384,7 @@ class Analysis:
             if gap>gapmax:
                 lenx=self.Lx-gap
             else:
-                lenx=self.Ly
+                lenx=self.Lx
             print('cluster length x ' +str(lenx))
             yval=np.sort(np.union1d(self.conf.y[Iarr[islargest]],self.conf.y[Jarr[islargest]]))
             ydiff=np.ediff1d(yval)

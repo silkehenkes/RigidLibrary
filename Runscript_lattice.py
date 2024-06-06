@@ -22,13 +22,13 @@ mu=5
 
 # Experiment type, for other types please use a different runscript.
 datatype = 'lattice'
-bc='open'
-#bc='x' 
+#bc='open'
+bc='x' 
 #bc='y'
 #bc='xy'
 
 # Potential loop over multiple lattices
-lattice_nums=['_20by20_']
+lattice_nums=['_100by20_']
 
 # Loop over experiment
 for lattice in lattice_nums:
@@ -47,7 +47,7 @@ for lattice in lattice_nums:
         
         #Creating configuration
         # def __init__(self, folder, datatype, bc='open',nhex1=20, nhex2=20, mu0=0.2, strainstep=0.1):
-        ThisConf = CF.Configuration(topdir,datatype, bc, 20,20)
+        ThisConf = CF.Configuration(topdir,datatype, bc, 100,20)
                 
         #Reading in the data
         ThisConf.readLatticedata(lattice, bc,True)
@@ -64,9 +64,10 @@ for lattice in lattice_nums:
         print(ThisPebble.pcluster)
 
         maxlabels = ThisPebble.MaxRigidPos()
-        pdata = np.zeros((len(maxlabels),2))
-        pdata[:,0] = ThisConf.x[maxlabels]
-        pdata[:,1] = ThisConf.y[maxlabels]
+        pdata = np.zeros((len(maxlabels),3))
+        pdata[:,0] = maxlabels
+        pdata[:,1] = ThisConf.x[maxlabels]
+        pdata[:,2] = ThisConf.y[maxlabels]
         filename = topdir + '/MaxCluster_' + bc + '.dat'
         with open(filename,'w',newline="\n") as f:
             wr=csv.writer(f)
@@ -75,6 +76,11 @@ for lattice in lattice_nums:
         ########## Have a look at some analysis functions of the rigid clusters
         #def __init__(self,conf0,pebbles0,hessian0,tiling0='skip',fgiven0=0.001,verbose0=False):
         ThisAnalysis=AN.Analysis(ThisConf,ThisPebble,0)
+
+        # cluster statistics
+        frac,fracmax,lenx,leny=ThisAnalysis.clusterStatistics()
+        print('We have a system with a total fraction ' + str(frac) + ' and ' + str(fracmax) + ' in the largest rigid cluster ')
+        print('with cluster lengths lenx ' + str(lenx) + ' and leny ' + str(leny))
 
         #def plotStresses(self,plotCir,plotVel,plotCon,plotF,plotStress,**kwargs):
         fig1 = ThisAnalysis.plotStresses(False,False,True,False,False)    
