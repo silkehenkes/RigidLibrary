@@ -15,7 +15,8 @@ import pandas as pd
 import csv 
 
 #topdir='/directory/where/experimental/data/is/located/'
-topdir='./RigidLibrary/DataLattice'
+#topdir='./RigidLibrary/DataLattice'
+topdir='./KyungLattice'
 
 # experimental friction coefficient
 mu=5
@@ -27,13 +28,11 @@ bc='x'
 #bc='y'
 #bc='xy'
 
-nhex = 100 ########## please put the lattice size
+nhex1 = 100 ########## please put the lattice size
+nhex2 = 40
 # Potential loop over multiple lattices
-<<<<<<< HEAD
-lattice_nums=['_'+str(nhex)+'by'+str(nhex)+'_']
-=======
-lattice_nums=['_100by20_']
->>>>>>> 681e7ef330a7d998735185a172d704d90781d473
+lattice_nums=['_'+str(nhex1)+'by'+str(nhex2)+'_']
+#lattice_nums=['_100by20_']
 
 # Loop over experiment
 for lattice in lattice_nums:
@@ -41,7 +40,9 @@ for lattice in lattice_nums:
         filename =topdir+'/Adjacency_list' + lattice + bc + '.txt'
         print(filename)
         try:
-            data = np.loadtxt(topdir+'/Adjacency_list' + lattice + bc + '.txt', delimiter=',')
+            #data = np.loadtxt(topdir+'/Adjacency_list' + lattice + bc + '.txt', delimiter=',')
+            data = np.loadtxt(filename, delimiter=',')
+            print(data[0])
             #nsteps is the maximal frame number
             nsteps = np.max(data[:,0]).astype(int)
         except:
@@ -51,12 +52,10 @@ for lattice in lattice_nums:
         
         
         #Creating configuration
-<<<<<<< HEAD
-        ThisConf = CF.Configuration(topdir,datatype, bc, nhex)
-=======
+
+        ThisConf = CF.Configuration(topdir,datatype, bc, nhex1,nhex2)
+
         # def __init__(self, folder, datatype, bc='open',nhex1=20, nhex2=20, mu0=0.2, strainstep=0.1):
-        ThisConf = CF.Configuration(topdir,datatype, bc, 100,20)
->>>>>>> 681e7ef330a7d998735185a172d704d90781d473
                 
         #Reading in the data
         ThisConf.readLatticedata(lattice, bc,True)
@@ -70,14 +69,15 @@ for lattice in lattice_nums:
         # compute rigid clusters
         cidx, clusterall, clusterallBonds, clusteridx, BigCluster=ThisPebble.rigid_cluster()
 
-        print(ThisPebble.pcluster)
+        #print(ThisPebble.pcluster)
 
         maxlabels = ThisPebble.MaxRigidPos()
+        
         pdata = np.zeros((len(maxlabels),3))
         pdata[:,0] = maxlabels
         pdata[:,1] = ThisConf.x[maxlabels]
         pdata[:,2] = ThisConf.y[maxlabels]
-        filename = topdir + '/MaxCluster_' + bc + '.dat'
+        filename = topdir + f'/MaxCluster_{nhex1}by{nhex2}_{bc}.dat'
         with open(filename,'w',newline="\n") as f:
             wr=csv.writer(f)
             wr.writerows(pdata)
@@ -92,10 +92,10 @@ for lattice in lattice_nums:
         print('with cluster lengths lenx ' + str(lenx) + ' and leny ' + str(leny))
 
         #def plotStresses(self,plotCir,plotVel,plotCon,plotF,plotStress,**kwargs):
-        fig1 = ThisAnalysis.plotStresses(False,False,True,False,False)    
+        #fig1 = ThisAnalysis.plotStresses(False,False,True,False,False)    
 
         #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):  
-        fig2 = ThisAnalysis.plotPebbles(True,True,True,False,True)  
+        #fig2 = ThisAnalysis.plotPebbles(True,True,True,False,True)  
 
         fig3 = ThisAnalysis.plotPebbles(True,True,False,True,False)  
         

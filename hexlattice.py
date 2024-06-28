@@ -7,15 +7,25 @@ from hexlattice_func import *
 # Example usage
 s = 1  # size of the hexagon
 
+
 # Lattice size
 nhex = 100
 
+
 # Lattice aspect ratio
-aratio=0.2
+aratio=.4
+
+# Length aspect ratio
+lratio=np.sqrt(3.)/2.*aratio
+
+
+print("Hexagonal lattice with lattice aspect ratio ",aratio)
+print(" Lx = ",nhex*np.sqrt(3)/2.," Ly = ",nhex*aratio*3./2," Lx/Ly = ",1/lratio,"\n")
+
 
 # Fraction settings
-fraction_edge1 = 0.7
-fraction_edge2 = 0.2
+fraction_edge1 = 0.85
+fraction_edge2 = 0.25
 fraction_dbonds = 0.5  # Adjust the fraction here
 
 # Define boundary type
@@ -28,19 +38,21 @@ plot_grid_array= True
 run_edge_lists = True
 run_adjacency_list = True
 
+topdir='./KyungLattice/'
+
 def main():
     try:
         h = nhex
         v = int(nhex*aratio)
 
         ######### Please check if these files are in your running directory if you want to generate new one
-        hexgrid_path = 'hexgrid.csv'
-        connectivity_list_path = 'connectivity_list.csv'
-        edge_list_path = 'edge_list.csv'
-        edge_list1_path = 'edge_list1.csv'
-        edge_list2_path = 'edge_list2.csv'
-        output_file = f'particle_positions_{h}by{v}_{boundary_type}.txt'
-        adjacency_list_path = f'Adjacency_list_{h}by{v}_{boundary_type}.txt'
+        hexgrid_path = topdir+f'hexgrid_{h}by{v}_{boundary_type}.csv'
+        connectivity_list_path = topdir+f'connectivity_list_{h}by{v}_{boundary_type}.csv'
+        edge_list_path = topdir+f'edge_list_{h}by{v}_{boundary_type}.csv'
+        edge_list1_path = topdir+f'edge_list1_{h}by{v}_{boundary_type}.csv'
+        edge_list2_path = topdir+f'edge_list2_{h}by{v}_{boundary_type}.csv'
+        output_file = topdir+f'particle_positions_{h}by{v}_{boundary_type}.txt'
+        adjacency_list_path = topdir+f'Adjacency_list_{h}by{v}_{boundary_type}.txt'
 
         # Generate hexgrid
         if run_hexgrid:
