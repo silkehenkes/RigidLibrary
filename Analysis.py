@@ -234,6 +234,7 @@ class Analysis:
                             color='b'
                         cir2=ptch.Circle((self.conf.x[k],self.conf.y[k]),radius=0.75*self.conf.rad[k],ec=(0.5, 0.5, 0.5),fc=color,linewidth=2)
                         axval.add_patch(cir2)
+
             
         # Plotting clusters, using the external (global!) random_read color pattern
         if (plotClus):
@@ -255,6 +256,16 @@ class Analysis:
                         #print(rgbclus[k,:])
                 else:
                     self.rgbclus[k,:]=np.array([0,0,0])
+            for i in range(self.N):
+                if len(self.pebbles.pcluster[i])>0:
+                    try:
+                        color=self.random_read[self.pebbles.pluster[i][0],:]
+                    except:
+                        color=rgbpattern[self.pebbles.pcluster[i][0],:]
+                        #print(rgbclus[k,:])
+                    cir2=ptch.Circle((self.conf.x[i],self.conf.y[i]),radius=self.conf.rad[i],ec=(0.5, 0.5, 0.5),fc=color,linewidth=2)
+                    axval.add_patch(cir2)
+
             for k in range(len(self.pebbles.Ifull)):
                 # this version depends on pebble numbering, so use 2nd version
                 x0,x1,y0,y1=self.conf.getConPos2(self.pebbles.Ifull[k],self.pebbles.Jfull[k])

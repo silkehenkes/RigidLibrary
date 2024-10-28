@@ -138,11 +138,34 @@ class Pebbles:
         counter=0
         for lillist in self.pcluster:
             if len(lillist)>0:
+                print(lillist)
                 if int(lillist[0])==self.maxidx:
                     maxlabels.append(counter)
             counter+=1
         return maxlabels
 
+    def MaxRigidContacts(self):
+        # rigid particle labels
+        maxPlabels = self.MaxRigidPos()
+        print(maxPlabels)
+        # rigid contact labels
+        maxClabels=list(np.where(self.cluster==self.maxidx)[0])
+        # Full contact matrix 
+        # index is particle label. First entry is 0 if not rigid and 1 if rigid
+        contactmat = [[0] for i in range(self.N)]
+        for k in maxPlabels:
+            contactmat[k][0]=1
+        print(contactmat)
+        # subsequent entries are indices of rigid neighbours
+        for k in maxClabels:
+            i = int(self.Ifull[k])
+            j = int(self.Jfull[k])
+            if j not in contactmat[i]:
+                contactmat[i].append(j)
+            if i not in contactmat[j]:
+                contactmat[j].append(i)
+        #print(contactmat)
+        return contactmat
     # ============================= Rigid clusters =======================================
     # Problem was the wrong percolation algorithm. Following Jacobs and Hendrickson, only one round is necessary
     # since by construction, every rigid site is found in the pebble search eventually (OR NOT?)

@@ -15,21 +15,23 @@ import pandas as pd
 import csv 
 
 #topdir='/directory/where/experimental/data/is/located/'
-#topdir='./RigidLibrary/DataLattice'
-topdir='./KyungLattice'
+topdir='./DataLattice'
+#topdir='./KyungLattice'
 
 # experimental friction coefficient
 mu=5
 
 # Experiment type, for other types please use a different runscript.
 datatype = 'lattice'
-#bc='open'
-bc='x' 
+bc='open'
+#bc='x' 
 #bc='y'
 #bc='xy'
 
-nhex1 = 100 ########## please put the lattice size
-nhex2 = 40
+#nhex1 = 100 ########## please put the lattice size
+#nhex2 = 40
+nhex1 = 20
+nhex2 = 20
 # Potential loop over multiple lattices
 lattice_nums=['_'+str(nhex1)+'by'+str(nhex2)+'_']
 #lattice_nums=['_100by20_']
@@ -82,6 +84,8 @@ for lattice in lattice_nums:
             wr=csv.writer(f)
             wr.writerows(pdata)
 
+        contactmat = ThisPebble.MaxRigidContacts()
+
         ########## Have a look at some analysis functions of the rigid clusters
         #def __init__(self,conf0,pebbles0,hessian0,tiling0='skip',fgiven0=0.001,verbose0=False):
         ThisAnalysis=AN.Analysis(ThisConf,ThisPebble,0)
@@ -97,6 +101,6 @@ for lattice in lattice_nums:
         #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):  
         #fig2 = ThisAnalysis.plotPebbles(True,True,True,False,True)  
 
-        fig3 = ThisAnalysis.plotPebbles(True,True,False,True,False)  
+        fig3 = ThisAnalysis.plotPebbles(True,False,False,True,False)  
         
         plt.show()

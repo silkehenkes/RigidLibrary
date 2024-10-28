@@ -24,7 +24,7 @@ datatype = 'experiment_annulus'
 
 #Change this if multiple experiments were used and use this to locate the correct data per experiment
 experiment_nums=['10']
-
+stupid='n/a'
 # Loop over experiment
 for experiment in experiment_nums:
         # Extract some information from the data set:
@@ -41,7 +41,8 @@ for experiment in experiment_nums:
         # Start at 1 since steps start at 1. Ends at nsteps.
         for u in range(1, nsteps+1):
                 #Creating configuration
-                ThisConf = CF.Configuration(topdir+experiment,datatype, mu, u)
+                #def __init__(self, folder, datatype, bc='open',nhex1=20, nhex2=20, mu0=0.2, strainstep=0.1):
+                ThisConf = CF.Configuration(topdir+experiment,datatype, stupid,stupid,stupid, 0.2,u)
                 
                 #Reading in the data
                 ThisConf.ReadExpdataAnnulus(verbose=False)

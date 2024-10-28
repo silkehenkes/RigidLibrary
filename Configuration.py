@@ -293,6 +293,7 @@ class Configuration:
        
         def ReadExpdataAnnulus(self, verbose):    
                 prefix = self.folder +'/particle_positions.txt'
+                print(prefix)
                 self.isPosdata=True
                 try:
                     coords=np.loadtxt(prefix, delimiter=',')
@@ -910,11 +911,14 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
-                if self.periodicx:
-                    x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
-                if self.periodicy:
-                    y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
-                    print('periodic y')
+                try:
+                    if self.periodicx:
+                        x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                    if self.periodicy:
+                        y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
+                        print('periodic y')
+                except:
+                    pass
                 if not nobound:
                     if self.addBoundarySquare:
                         ival=self.I[k]
@@ -962,11 +966,14 @@ class Configuration:
                                 y1=y1-self.Ly*yover
                                 x1-=self.Lx*self.strain*yover
                                 x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
-                if self.periodicx:
-                    x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
-                if self.periodicy:
-                    y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
-                    #print('periodic y')
+                try:
+                    if self.periodicx:
+                        x1=x1-self.Lx*np.round((x1-x0)/self.Lx)
+                    if self.periodicy:
+                        y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
+                        #print('periodic y')
+                except:
+                     pass
                 if not nobound:
                     if self.addBoundarySquare:
                         if ((k1==self.bindices[0]) or (k1==self.bindices[1])): #top or bottom
