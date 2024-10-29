@@ -1,17 +1,12 @@
 import random
 import sys, os, glob
 
-
 # Load pebble game and dynamical matrix libraries
-from Configuration import *
+import Configuration as CF
 import Pebbles as PB
 import Hessian as HS
 import Analysis as AN
 import Tiling as TY
-
-# Global list of exisiting geometries
-# Include in script, not here
-setups={'simulation':ConfigurationSimulation,'lattice':ConfigurationLattice,'experiment_square':ConfigurationExpSquare,'experiment_annulus':ConfigurationExpAnnulus}
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,45 +17,17 @@ import pandas as pd
 topdir='./DataAnnulus/'
 
 # experimental friction coefficient
-# mu=0.3
+mu=5
+
 # Experiment type, for other types please use a different runscript.
-# datatype = 'experiment_annulus'
-# self.folder = param["folder"]
-# self.mu = param["mu"]
-# self.R1 = param["R1"]
-# self.R2 = param["R2"]
-# self.mid_x = param["mid_x"]
-# self.mid_y = param["mid_y"]
-# self.texture = param["texture"]
-# self.density = param["density"]
-# # Prefactor of the stiffness coefficient, k_n = \frac{\pi}{6} E h = 6490 kg /s^2
-# self.stiffness = param["stiffness"]
-# # radius conversion factor from pixel to m.
-# self.rconversion = param["rconversion"]
-# # height of the disks in m
-# self.height = param["height"]
-# # boundary width
-# self.width = param["width"]
-param = {}
-param["mu"]=0.3
-param["datatype"] = 'experiment_annulus'
-param["R1"] = 1548
-param["R2"] = 2995
-param["mid_x"]=3134
-param["mid_y"]=3028
-param["texture"]=30
-param["density"]=1060.0
-param["stiffness"]=6490.0
-param["rconversion"]=2.7e-4
-param["height"]=3.1e-3
-param["width"]=20e-3
+datatype = 'experiment_annulus'
 
 #Change this if multiple experiments were used and use this to locate the correct data per experiment
 experiment_nums=['10']
+stupid='n/a'
 # Loop over experiment
 for experiment in experiment_nums:
         # Extract some information from the data set:
-        param["folder"] = topdir+'/'+experiment
         try:
             data = np.loadtxt(topdir+'/'+experiment+'/Adjacency_list.txt', delimiter=',')
             #nsteps is the maximal frame number
@@ -74,22 +41,14 @@ for experiment in experiment_nums:
         # Start at 1 since steps start at 1. Ends at nsteps.
         for u in range(1, nsteps+1):
                 #Creating configuration
-                # self.geom=geometries[self.param.constraint](self.param)
-                #ThisConf = CF.Configuration(topdir+experiment,datatype, stupid,stupid,stupid, 0.2,u)
-                # setups={'simulation':ConfigurationSimulation,'lattice':ConfigurationLattice,'experiment_square':ConfigurationExpSquare,'experiment_annulus':ConfigurationExpAnnulus}
-                #class ConfigurationExpAnnulus(Configuration):
-                #   def __init__(self,param):
-                #       print("ConfigurationExpAnnulus: Created new Configuration Experimental Annulus")
-                #       super(ConfigurationExpAnnulus,self).__init__('experiment_annulus')
-                ThisConf = setups[param["datatype"]](param)
+                #def __init__(self, folder, datatype, bc='open',nhex1=20, nhex2=20, mu0=0.2, strainstep=0.1):
+                ThisConf = CF.Configuration(topdir+experiment,datatype, stupid,stupid,stupid, 0.2,u)
                 
                 #Reading in the data
-                # def ReadData(self, posfile,confile,step,verbose=False):    
-                ThisConf.ReadData(param["folder"] + '/particle_positions.txt',param["folder"] + '/Adjacency_list.txt',u,True)
+                ThisConf.ReadExpdataAnnulus(verbose=False)
                 
                 #Adding boundary contacts, passsing threshold argument is possible
-                # def AddBoundaryContacts(self,verbose=False):
-                ThisConf.AddBoundaryContacts(True)
+                ThisConf.AddBoundaryContactsAnnulus()
 
                 #Setting up and playing the pebble game
                 ThisPebble = PB.Pebbles(ThisConf,3,3,'nothing',False)
