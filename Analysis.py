@@ -74,13 +74,13 @@ class Analysis:
             self.tiles = self.tiling.tiles
         
         # this is the distance beween lines in the double contact plots
-        if self.conf.datatype == 'experiment_square':
+        if self.conf.params["datatype"] == 'experiment_square':
                 self.small = 8.0
-        elif self.conf.datatype == 'experiment_annulus':
+        elif self.conf.params["datatype"] == 'experiment_annulus':
                 self.small = 12.0
-        elif self.conf.datatype == 'simulation':
+        elif self.conf.params["datatype"] == 'simulation':
                 self.small = 0.2
-        elif self.conf.datatype =='lattice':
+        elif self.conf.params["datatype"] =='lattice':
             self.small = 0.1
         else:
             self.small = 0.2
@@ -177,10 +177,10 @@ class Analysis:
             print("Plot Stress is still under construction.")
         plt.title('Forces and contacts')				
         axval.axis('scaled')
-        if self.conf.datatype=='simulation':
+        if self.conf.params["datatype"]=='simulation':
             axval.set_xlim(-self.Lx/2,self.Lx/2)
             axval.set_ylim(-self.Ly/2,self.Ly/2)
-        elif self.conf.datatype=='experiment':
+        elif self.conf.params["datatype"]=='experiment':
             xmin=np.amin(self.conf.x)-20
             ymin=np.amin(self.conf.y)-20
             axval.set_xlim(xmin,xmin+self.Lx+120)
@@ -338,10 +338,10 @@ class Analysis:
                     else:
                         axval.text(x0+0.5*(x1-x0),y0+0.5*(y1-y0),str(k),fontsize=8)  
         axval.axis('scaled')
-        if self.conf.datatype=='simulation':
+        if self.conf.params["datatype"]=='simulation':
             axval.set_xlim(-self.Lx/2,self.Lx/2)
             axval.set_ylim(-self.Ly/2,self.Ly/2)
-        elif self.conf.datatype=='experiment_square':
+        elif self.conf.params["datatype"]=='experiment_square':
             xmin=np.amin(self.conf.x)-20
             ymin=np.amin(self.conf.y)-20
             axval.set_xlim(xmin,xmin+self.Lx+120)
@@ -553,10 +553,10 @@ class Analysis:
             else:
                 print ("Unknown mode, doing nothing!")
         axval.axis('scaled')
-        if self.conf.datatype=='simulation':
+        if self.conf.params["datatype"]=='simulation':
             axval.set_xlim(-self.Lx/2,self.Lx/2)
             axval.set_ylim(-self.Ly/2,self.Ly/2)
-        elif self.conf.datatype=='experiment':
+        elif self.conf.params["datatype"]=='experiment':
             xmin=np.amin(self.conf.x)-20
             ymin=np.amin(self.conf.y)-20
             axval.set_xlim(xmin,xmin+self.Lx+120)
@@ -597,10 +597,10 @@ class Analysis:
                 conlink=lne.Line2D([x0,x1],[y0,y1],lw=1.0/fval,color=Fcolor(1.0/fval))
                 axval.add_line(conlink)
             axval.axis('scaled')
-            if self.conf.datatype=='simulation':
+            if self.conf.params["datatype"]=='simulation':
                     axval.set_xlim(-self.Lx/2,self.Lx/2)
                     axval.set_ylim(-self.Ly/2,self.Ly/2)
-            elif self.conf.datatype=='experiment':
+            elif self.conf.params["datatype"]=='experiment':
                     xmin=np.amin(self.conf.x)-20
                     ymin=np.amin(self.conf.y)-20
                     axval.set_xlim(xmin,xmin+self.Lx+120)
@@ -688,10 +688,10 @@ class Analysis:
                 conlink=lne.Line2D([x0,x1],[y0,y1],lw=5-fval,color=Fcolor(5-fval))
                 axval.add_line(conlink)
             axval.axis('scaled')
-            if self.conf.datatype=='simulation':
+            if self.conf.params["datatype"]=='simulation':
                 axval.set_xlim(-self.Lx/2,self.Lx/2)
                 axval.set_ylim(-self.Ly/2,self.Ly/2)
-            elif self.conf.datatype=='experiment':
+            elif self.conf.params["datatype"]=='experiment':
                 xmin=np.amin(self.conf.x)-20
                 ymin=np.amin(self.conf.y)-20
                 axval.set_xlim(xmin,xmin+self.Lx+120)
@@ -770,10 +770,10 @@ class Analysis:
 
         axval.axis('scaled')
         #axval.axis('off')
-        if self.conf.datatype=='simulation':
+        if self.conf.params["datatype"]=='simulation':
             axval.set_xlim(-self.Lx/2,self.Lx/2)
             axval.set_ylim(-self.Ly/2,self.Ly/2)
-        elif self.conf.datatype=='experiment':
+        elif self.conf.params["datatype"]=='experiment':
             xmin=np.amin(self.conf.x)-20
             ymin=np.amin(self.conf.y)-20
             axval.set_xlim(xmin,xmin+self.Lx+120)

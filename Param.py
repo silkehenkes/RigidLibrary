@@ -39,7 +39,6 @@ class Paramreader:
                 except:
                     rhs = row[1].strip()
                 self.params[lhs] = rhs
-        print(self.params)
         ## postprocess particular items:
         # Convert main periodic string 'True' / 'False' and make x and y inherit
         # Expect this to be 'checkxy' if x and y are different
@@ -54,6 +53,9 @@ class Paramreader:
         # Consistency: Reset the global periodic if x and y are different
         if self.params['periodicx'] != self.params['periodicy']:
             self.params['periodic']='checkxy'
+
+    def set_folder(self,folder0):
+        self.params["folder"]=folder0
        
 
 

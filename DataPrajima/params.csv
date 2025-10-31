@@ -1,0 +1,16 @@
+datatype, experiment_square,
+mu ,0.3,
+periodic , False,
+has_angles , False,
+density ,1060, # bulk material density kg/m^3
+stiffness ,6490, # prefactor of the stiffness coefficient k_n  \frac{\pi}{6} E h  
+pixel_convert,0.00027,# radius conversion factor from pixel to m.
+thickness ,0.0031,# thickness of the disks 
+width ,0.02,  # boundary width
+prefix1 , DSC      ,# Prefix on the image file names 
+prefix2 , _solved_Tracks_,
+experiment , True,
+position_error,0.1,#not a real value yet
+force_error,0.1, #not a real value yet
+pebble_game_m, 3, # pebble game (m,n): m value
+pebble_game_n, 2, # pebble game (m,n): n value
