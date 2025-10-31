@@ -17,13 +17,13 @@ import Holes as HO
 import matplotlib.pyplot as plt
 
 # Location of data to analyse
-# folder = './DataPrajima/'
-folder = './Data_dummy/'
+folder = './DataPrajima/'
+#folder = './Data_dummy/'
 paramfile = 'params.csv'
 posfile='particle_positions.txt'
 confile='Adjacency_list.txt'
 # We will still assume that these are part of a sequence
-step=1
+step=100
 
 ThisPar = PR.Paramreader(folder+paramfile)
 # ThisPar.params

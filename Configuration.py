@@ -54,37 +54,27 @@ class Configuration:
         self.isPosdata=True
         coords=np.loadtxt(self.folder+posfile, delimiter=',')
         # fudging placeholder data, delete and revert
-        #coords=coords[coords[:,0] == step]
-        self.id=coords[:,0]
-        self.x=coords[:,1]
-        self.y=coords[:,2]
-        self.rad=coords[:,3]
-        self.boundary=coords[:,4]
-        self.N=len(self.rad)
-        print("Experiment with " +str(self.N)+ " particles")
-        self.Lx=np.amax(self.x)-np.amin(self.x)
-        self.Ly=np.amax(self.y)-np.amin(self.y)
-        del coords
-        # try:
-        #     coords=np.loadtxt(self.folder+posfile, delimiter=',')
-        #     coords=coords[coords[:,0] == step]
-        #     self.id=coords[:,1]
-        #     self.x=coords[:,2]
-        #     self.y=coords[:,3]
-        #     self.rad=coords[:,4]
-        #     self.boundary=coords[:,5]
-        #     self.N=len(self.rad)
-        #     print("Experiment with " +str(self.N)+ " particles")
-        #     self.Lx=np.amax(self.x)-np.amin(self.x)
-        #     self.Ly=np.amax(self.y)-np.amin(self.y)
-        #     del coords
-        # except:
-        #     self.isPosdata=False
-        #     self.x=0
-        #     self.y=0
-        #     self.rad=1 # purely so that we can divide by it ...
-        #     self.N=0
-        #     print("Error: there is no position data here")
+        coords=coords[coords[:,0] == step]
+        try:
+            coords=np.loadtxt(self.folder+posfile, delimiter=',')
+            coords=coords[coords[:,0] == step]
+            self.id=coords[:,1]
+            self.x=coords[:,2]
+            self.y=coords[:,3]
+            self.rad=coords[:,4]
+            self.boundary=coords[:,5]
+            self.N=len(self.rad)
+            print("Experiment with " +str(self.N)+ " particles")
+            self.Lx=np.amax(self.x)-np.amin(self.x)
+            self.Ly=np.amax(self.y)-np.amin(self.y)
+            del coords
+        except:
+            self.isPosdata=False
+            self.x=0
+            self.y=0
+            self.rad=1 # purely so that we can divide by it ...
+            self.N=0
+            print("Error: there is no position data here")
         #Load in contact data
         #confile = self.folder +'/Adjacency_list.txt'
         self.isCondata=True
@@ -117,24 +107,28 @@ class Configuration:
                 #Add contact id's
                 i = condata[:,1][k].astype(int)
                 j = condata[:,2][k].astype(int)
-                argi = np.argwhere(self.id == i).flatten()[0]
-                argj = np.argwhere(self.id == j).flatten()[0]
-                                    
-                #For now we identify particle id's with indices in the list. Not ideal for debugging, but it works.                   
-                self.I.append(argi)
-                self.J.append(argj)
-                
-                #Extract forces
-                fn = condata[:,4][k]
-                ft = condata[:,3][k]
-                fn0.append(fn)
-                ft0.append(ft)
-                
-                #Determine frictional or sliding
-                if (abs(ft)/fn>self.mu):
-                    fm0.append(1)
-                else:
-                    fm0.append(0)
+                if j>0:
+                    print("Found contact between particle " + str(i) + " and " + str(j))
+                    argi = np.argwhere(self.id == i).flatten()[0]
+                    print("which lives at position  " + str(argi))
+                    argj = np.argwhere(self.id == j).flatten()[0]
+                    print("and  " + str(argj) + " of the particle list.")
+                                        
+                    #For now we identify particle id's with indices in the list. Not ideal for debugging, but it works.                   
+                    self.I.append(argi)
+                    self.J.append(argj)
+                    
+                    #Extract forces
+                    fn = condata[:,4][k]
+                    ft = condata[:,3][k]
+                    fn0.append(fn)
+                    ft0.append(ft)
+                    
+                    #Determine frictional or sliding
+                    if (abs(ft)/fn>self.mu):
+                        fm0.append(1)
+                    else:
+                        fm0.append(0)
         
         #Final arrays
         self.ncon=len(fm0)
