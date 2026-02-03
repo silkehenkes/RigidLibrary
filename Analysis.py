@@ -75,7 +75,7 @@ class Analysis:
         
         # this is the distance beween lines in the double contact plots
         if self.conf.params["datatype"] == 'experiment_square':
-                self.small = 8.0
+                self.small = 20.0
         elif self.conf.params["datatype"] == 'experiment_annulus':
                 self.small = 12.0
         elif self.conf.params["datatype"] == 'simulation':
@@ -163,6 +163,7 @@ class Analysis:
             fscale=self.fgiven
             Fcolor,Fmap=self.color_init(np.sqrt(np.amax(self.conf.fnor))/fscale)
             for k in range(len(self.conf.I)):
+                #print('contact ' + str(k) + ' between ' + str(self.conf.I[k]) + 'and ' + str(self.conf.J[k]))
                 fval=np.sqrt(self.conf.fnor[k]/fscale)
                 x0,x1,y0,y1=self.conf.getConPos(k)
                 conlink=lne.Line2D([x0,x1],[y0,y1],color=Fcolor(fval),lw=2*fval)
@@ -198,8 +199,8 @@ class Analysis:
     
     # =============== pebble plotting ========================================
     # boolean arguments are plotting options (what to add or not)
-    #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,axval,running):
-    def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):
+    #def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotClusCir,plotOver,**kwargs):
+    def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotClusCir,plotOver,**kwargs):
         if 'figure' in kwargs:
             fig=plt.figure(figsize=(20,20))
             #fig=plt.figure()
@@ -225,7 +226,7 @@ class Analysis:
             if (plotPeb):
                 for j in range(3):
                     if(self.pebbles.pebbles[k,j]==-1):
-                        t=t+1;
+                        t=t+1
                         if(t==1):
                             color='r'
                         if(t==2):
@@ -238,6 +239,7 @@ class Analysis:
             
         # Plotting clusters, using the external (global!) random_read color pattern
         if (plotClus):
+        
             self.rgbclus=np.empty((self.pebbles.ncon2,3))
             if self.pebbles.cidx>0:
                 rgbpattern=np.random.rand(self.pebbles.cidx+1,3)
@@ -256,15 +258,16 @@ class Analysis:
                         #print(rgbclus[k,:])
                 else:
                     self.rgbclus[k,:]=np.array([0,0,0])
-            for i in range(self.N):
-                if len(self.pebbles.pcluster[i])>0:
-                    try:
-                        color=self.random_read[self.pebbles.pluster[i][0],:]
-                    except:
-                        color=rgbpattern[self.pebbles.pcluster[i][0],:]
-                        #print(rgbclus[k,:])
-                    cir2=ptch.Circle((self.conf.x[i],self.conf.y[i]),radius=self.conf.rad[i],ec=(0.5, 0.5, 0.5),fc=color,linewidth=2)
-                    axval.add_patch(cir2)
+            if plotClusCir:
+                for i in range(self.N):
+                    if len(self.pebbles.pcluster[i])>0:
+                        try:
+                            color=self.random_read[self.pebbles.pluster[i][0],:]
+                        except:
+                            color=rgbpattern[self.pebbles.pcluster[i][0],:]
+                            #print(rgbclus[k,:])
+                        cir2=ptch.Circle((self.conf.x[i],self.conf.y[i]),radius=self.conf.rad[i],ec=(0.5, 0.5, 0.5),fc=color,linewidth=2)
+                        axval.add_patch(cir2)
 
             for k in range(len(self.pebbles.Ifull)):
                 # this version depends on pebble numbering, so use 2nd version

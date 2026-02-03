@@ -62,6 +62,7 @@ class Configuration:
             self.x=coords[:,2]
             self.y=coords[:,3]
             self.rad=coords[:,4]
+            # NEW PEGS: Label as follows: 0 interior, -2 -1 1 and 2 are the four boundaries
             self.boundary=coords[:,5]
             self.N=len(self.rad)
             print("Experiment with " +str(self.N)+ " particles")
@@ -79,7 +80,7 @@ class Configuration:
         #confile = self.folder +'/Adjacency_list.txt'
         self.isCondata=True
         fname = self.folder+confile
-        print(fname)
+        #print(fname)
         try:
             condata=np.loadtxt(self.folder+confile, delimiter=',')
             condata=condata[condata[:,0] == step]
@@ -87,7 +88,7 @@ class Configuration:
             self.isCondata=False
             print ("Error: there is no contact data here")
             return 1
-        print(condata)
+        #print(condata)
         
         #Create empty lists
         #Lists with particle ids
@@ -103,22 +104,25 @@ class Configuration:
         
         #Drop duplicates
         for k in range(len(condata[:,0])):
+            # INSERT HERE: Pegs is eithe with double contacts or with single force-balanced
+            # Currently fudged: reading only first occurence
+            # to do: Solution: also read other one and average forces (with correct sign, careful)
             if condata[:,1][k] > condata[:,2][k]:
                 #Add contact id's
                 i = condata[:,1][k].astype(int)
                 j = condata[:,2][k].astype(int)
                 if j>0:
-                    print("Found contact between particle " + str(i) + " and " + str(j))
+                    #print("Found contact between particle " + str(i) + " and " + str(j))
                     argi = np.argwhere(self.id == i).flatten()[0]
-                    print("which lives at position  " + str(argi))
+                    #print("which lives at position  " + str(argi))
                     argj = np.argwhere(self.id == j).flatten()[0]
-                    print("and  " + str(argj) + " of the particle list.")
+                    #print("and  " + str(argj) + " of the particle list.")
                                         
                     #For now we identify particle id's with indices in the list. Not ideal for debugging, but it works.                   
                     self.I.append(argi)
                     self.J.append(argj)
                     
-                    #Extract forces
+                    #Extract forces (first tangential and then normal in the list)
                     fn = condata[:,4][k]
                     ft = condata[:,3][k]
                     fn0.append(fn)
@@ -132,8 +136,8 @@ class Configuration:
         
         #Final arrays
         self.ncon=len(fm0)
-        self.I = np.array(self.I)
-        self.J = np.array(self.J)
+        #self.I = np.array(self.I)
+        #self.J = np.array(self.J)
         self.fnor=np.array(fn0)
         self.ftan=np.array(ft0)
         self.fullmobi=np.array(fm0)
@@ -221,11 +225,13 @@ class Configuration:
             y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
         if not nobound:
             if self.addBoundarySquare:
-                ival=self.I[k]
-                if ((ival==self.bindices[0]) or (ival==self.bindices[1])): #top or bottom
-                    x0=x1
-                if ((ival==self.bindices[2]) or (ival==self.bindices[3])): #left or right
-                    y0=y1
+                jval=self.J[k]
+                if ((jval==self.bindices[0]) or (jval==self.bindices[1])): #left or right
+                    #print('LR boundary ' + str(jval))
+                    y1=y0
+                if ((jval==self.bindices[2]) or (jval==self.bindices[3])): #down or up
+                    #print('UD boundary ' + str(jval))
+                    x1=x0
             if self.addBoundaryAnnulus:
                 ival=self.I[k]
                 l = 100 #Length in pixels of the contacts with the boundary
@@ -272,10 +278,12 @@ class Configuration:
             y1=y1-self.Ly*np.round((y1-y0)/self.Ly)
         if not nobound:
             if self.addBoundarySquare:
-                if ((k1==self.bindices[0]) or (k1==self.bindices[1])): #top or bottom
-                    x0=x1
-                if ((k1==self.bindices[2]) or (k1==self.bindices[3])): #left or right
-                    y0=y1
+                if ((k2==self.bindices[0]) or (k2==self.bindices[1])): #left or right
+                    #print('LR boundary ' + str(k1))
+                    y1=y0
+                if ((k2==self.bindices[2]) or (k2==self.bindices[3])): #bottom or top
+                    #print('UD boundary ' + str(k1))
+                    x1=x0
             if self.addBoundaryAnnulus:
                 l = 100 #Length in pixels of the contacts with the boundary
                 if (k1==self.bindices[0] and k2==self.bindices[1]) or (k1==self.bindices[1] and k2==self.bindices[0]):
@@ -350,8 +358,132 @@ class ConfigurationExpSquare(Configuration):
         # boundary width
         self.width = self.params["width"]
 
+
     #### ======================== Boundary integration =======================================================
-    def AddBoundaryContactsSquare(self,):
+    # NEW PEGS format: contacts ival -1, ft, fn are contacts with the boundary
+    # In a format that assumes an orthogonal contact with boundary. Numbers are coming from a direct contact inversion.
+    # Not implemented yet: particle in corner. Will code assuming two separate contacts with either wall and their own force
+    # NEW PEGS: Label as follows: particles 0 interior, -2 -1 1 and 2 are the four boundaries. -1: Left, +1: Right, 2: Down, -2: Up
+    # Still to be sorted out: Partile in contact with two walls.
+    def AddBoundaryContactsSquare(self,confile,step):
+
+        self.addBoundarySquare=True
+        condata=np.loadtxt(self.folder+confile, delimiter=',')
+        condata=condata[condata[:,0] == step]
+        
+        # Labels of Boundary "particles"
+        # note: N = -1 = Left,  N+1 = 1 = Right, N+2 = down = 2, N+3 = Up = -2
+        self.bindices=[self.N,self.N+1,self.N+2,self.N+3]
+        nconrunning = self.ncon
+
+        #Lists with forces
+        fn0=[]
+        ft0=[]
+        #Frictional or sliding list
+        fm0=[]
+        nx0=[]
+        ny0=[]
+        #Drop duplicates
+        for k in range(len(condata[:,0])):
+            if condata[:,1][k] > condata[:,2][k]:
+                #Add contact id's
+                i = condata[:,1][k].astype(int)
+                j = condata[:,2][k].astype(int)
+                if j==-1:
+                    #print("Found contact " +str(k) + " between particle " + str(i) + " and the boundary")
+                    argi = np.argwhere(self.id == i).flatten()[0]
+                    #print("which lives at position  " + str(argi))
+                    blabel = self.boundary[argi]
+                    #print('Particle position x ' + str(self.x[argi]) + ' and y ' + str(self.y[argi]))
+                    #print(" and is connected to boundary " + str(blabel))
+                                        
+                    #For now we identify particle id's with indices in the list. Not ideal for debugging, but it works.                   
+                    self.I.append(argi)
+                    # add the correct boundary particle:
+                    if blabel == -1: # Left
+                        self.J.append(self.bindices[0])
+                    elif blabel == 1: # Right
+                        self.J.append(self.bindices[1])
+                    elif blabel == -2: # Down
+                        self.J.append(self.bindices[2])
+                    elif blabel == 2: # Up
+                        self.J.append(self.bindices[3])
+                    else:
+                        print("Error: unknown boundary condition")
+                    
+                    #Extract forces (first tangential and then normal in the list)
+                    fn = condata[:,4][k]
+                    ft = condata[:,3][k]
+                    fn0.append(fn)
+                    ft0.append(ft)
+
+                    #Determine frictional or sliding
+                    if (abs(ft)/fn>self.mu):
+                        fm0.append(1)
+                    else:
+                        fm0.append(0)
+
+                    # One half of contact = particle
+                    # Other half is wall:
+                    if blabel == -1: # Left
+                        nx0.append(-1)
+                        ny0.append(0)
+                    elif blabel == 1: # Right
+                        nx0.append(1)
+                        ny0.append(0)
+                    elif blabel == -2: # Down
+                        nx0.append(0)
+                        ny0.append(-1)
+                    elif blabel == 2: # Up
+                        nx0.append(0)
+                        ny0.append(1)
+                    else:
+                        print("Error: unknown boundary condition")    
+
+        # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+        
+        # Threshold to check if a particle is close enough to walls.
+        upidx=np.argmax(self.y)
+        downidx=np.argmin(self.y)
+        leftidx=np.argmin(self.x)
+        rightidx=np.argmax(self.x)
+        
+        # Boundary posiitons:
+        # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+        up=self.y[upidx]
+        yup = up+self.rad[upidx]
+        down=self.y[downidx]
+        ydown = down-self.rad[downidx]
+        left=self.x[leftidx]
+        xleft=left-self.rad[leftidx]
+        right=self.x[rightidx]
+        xright=right+self.rad[rightidx]
+        
+        # coordinates of virtual boundary particles: in the middle, one Brad off from the edge of the outermost particle
+        Boundaries=np.zeros((4,3)) # Four boundary particles with their x,y and rad
+        Boundaries[0,:]=[xleft-self.Brad,(up+down)*0.5,self.Brad]
+        Boundaries[1,:]=[xright+self.Brad,(up+down)*0.5,self.Brad]  
+        Boundaries[2,:]=[(left+right)*0.5,ydown-self.Brad,self.Brad] 
+        Boundaries[3,:]=[(left+right)*0.5,yup+self.Brad,self.Brad]
+        #print(Boundaries)
+        
+         # Finally stick it at the end of the existing data
+        self.x=np.concatenate((self.x,Boundaries[:,0]))
+        self.y=np.concatenate((self.y,Boundaries[:,1]))
+        self.rad=np.concatenate((self.rad,Boundaries[:,2]))
+        self.fnor=np.concatenate((self.fnor,np.array(fn0)))
+        self.ftan=np.concatenate((self.ftan,np.array(ft0)))
+        self.fullmobi=np.concatenate((self.fullmobi,np.array(fm0)))
+        self.nx=np.concatenate((self.nx,np.array(nx0)))
+        self.ny=np.concatenate((self.ny,np.array(ny0)))
+        self.ncon=len(self.I)
+        self.N+=4
+        print ("Added boundaries!")      
+        
+       
+
+    ### Old version: Not compatible with PEGS2
+    def AddBoundaryContactsSquareLegacy(self,):
         self.addBoundarySquare=True
 
         # Threshold to check if a particle is close enough to walls.

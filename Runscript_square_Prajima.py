@@ -35,7 +35,12 @@ ThisConf = CF.ConfigurationExpSquare(ThisPar.params)
 # ########## Reading in the configuration and the next step
 # ReadData(self, posfile,confile,step,verbose=False):    
 ThisConf.ReadData(posfile,confile,step,True)
-#ThisConf.AddBoundaryContactsSquare()
+# NEW PEGS format: contacts ival -1, ft, fn are contacts with the boundary
+# In a format that assumes an orthogonal contact with boundary. Numbers are coming from a direct contact inversion.
+# Not implemented yet: particle in corner. Will code assuming two separate contacts with either wall and their own force
+# NEW PEGS: Label as follows: particles 0 interior, -2 -1 1 and 2 are the four boundaries. -1: Left, +1: Right, 2: Down, -2: Up
+# Still to be sorted out: Partile in contact with two walls.
+ThisConf.AddBoundaryContactsSquare(confile,step)
 # # also read in the next data at this point: dlabel further along in the numbering 
 # # Revise at a later stage.
 # #def ReadExpdataNext(self,numlabel,scale=False):
@@ -60,17 +65,17 @@ ThisHessian = HS.Hessian(ThisConf)
 
 ########## Have a look at some analysis functions of the rigid clusters
 #ddef __init__(self,conf0,pebbles0,hessian0,tiling0='skip',fgiven0=0.001,verbose0=False):
-ThisAnalysis=AN.Analysis(ThisConf,ThisPebble,ThisHessian,'skip',0.01,False)
+ThisAnalysis=AN.Analysis(ThisConf,ThisPebble,ThisHessian,'skip',0.1,False)
 # stress statistics
 zav,nm,pres,fxbal,fybal,torbal,mobin,mohist,sxx,syy,sxy,syx=ThisAnalysis.getStressStat()
 # cluster statistics
 frac,fracmax,lenx,leny=ThisAnalysis.clusterStatistics()
 #def plotStresses(self,plotCir,plotVel,plotCon,plotF,plotStress,**kwargs):
 fig1 = ThisAnalysis.plotStresses(True,False,False,True,False)
-#def plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotOver,**kwargs):
-#ThisAnalysis.plotPebbles(True,True,True,False,False)
-fig2 = ThisAnalysis.plotPebbles(True,True,True,False,False)
-fig3 = ThisAnalysis.plotPebbles(True,True,False,True,False)
+#plotPebbles(self,plotCir,plotPeb,plotPebCon,plotClus,plotClusCir,plotOver,**kwargs):
+
+fig2 = ThisAnalysis.plotPebbles(True,True,True,False,False,False)
+fig3 = ThisAnalysis.plotPebbles(True,True,False,True,False,False)
 
 
 ######### continuing with the Hessian now 
@@ -103,4 +108,6 @@ fig3 = ThisAnalysis.plotPebbles(True,True,False,True,False)
 #    print (P_disp_if_pebble,P_pebble_if_disp)
 #    # D2_min, needs assessment
 #    fig7 = ThisAnalysis.DisplacementCorrelateD2min(True)
+
+plt.show()
                                               
