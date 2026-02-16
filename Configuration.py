@@ -20,7 +20,7 @@ import numpy as np
 
 # Global list of exisiting geometries
 # Include in script, not here
-#setups={'simulation':ConfigurationSimulation,'lattice':ConfigurationLattice,'experiment_square':ConfigurationExpSquare,'experiment_annulus':ConfigurationExpAnnulus}
+#setups={'simulation':ConfigurationSimulation,'lattice':ConfigurationLattice,'experiment_square':ConfigurationExpSquare,'experiment_annulus':ConfigurationExpAnnulus,'graph':ConfigurationGraph}
 
 
 class Configuration:
@@ -39,6 +39,8 @@ class Configuration:
         if self.experiment:
             self.ReadDataExperiment(posfile,confile,step,verbose)    
         else:
+            if self.setup == 'simulation_graph':
+                self.ReadDataGraph(posfile,confile,verbose)  
             if verbose:
                 print("Somehow defaulted to Configuration base class. Doing nothing.")
 
@@ -1017,6 +1019,133 @@ class ConfigurationSimulation(Configuration):
             self.x-=self.L*np.round(self.x/self.L)
             self.y-=self.L*np.round(self.y/self.L)
             self.ncon=len(self.I)
+
+########## Casper configuration Random geometric graph #################
+class ConfigurationGraph(Configuration):
+
+    def __init__(self,params):
+        print("ConfigurationGraph: Created new Configuration Graph")
+        super(ConfigurationGraph,self).__init__(params)
+  
+        #self.setup = param["setup"] # redundant as needs to be same 'experiment_annulus' as in runscript
+        self.setup = 'simulation_graph'
+
+        #Set friction coefficient
+        self.mu = self.params["mu"]
+        # box size - add to params
+        self.L = self.params["L"]
+
+
+    # Read in data from posfile and confile, which is full file names set by the running script
+    def ReadDataGraph(self, posfile,confile,verbose=False):    
+        fname = self.folder+posfile
+        print(fname)
+        self.isPosdata=True
+        coords=np.loadtxt(self.folder+posfile, delimiter=',')
+        # fudging placeholder data, delete and revert
+        coords=coords[coords[:,0] == step]
+        try:
+            coords=np.loadtxt(self.folder+posfile, delimiter=',')
+            coords=coords[coords[:,0] == step]
+            self.id=coords[:,1]
+            self.x=coords[:,2]
+            self.y=coords[:,3]
+            self.rad=coords[:,4]
+            # NEW PEGS: Label as follows: 0 interior, -2 -1 1 and 2 are the four boundaries
+            self.boundary=coords[:,5]
+            self.N=len(self.rad)
+            print("Experiment with " +str(self.N)+ " particles")
+            self.Lx=np.amax(self.x)-np.amin(self.x)
+            self.Ly=np.amax(self.y)-np.amin(self.y)
+            del coords
+        except:
+            self.isPosdata=False
+            self.x=0
+            self.y=0
+            self.rad=1 # purely so that we can divide by it ...
+            self.N=0
+            print("Error: there is no position data here")
+        #Load in contact data
+        #confile = self.folder +'/Adjacency_list.txt'
+        self.isCondata=True
+        fname = self.folder+confile
+        #print(fname)
+        try:
+            condata=np.loadtxt(self.folder+confile, delimiter=',')
+            condata=condata[condata[:,0] == step]
+        except:
+            self.isCondata=False
+            print ("Error: there is no contact data here")
+            return 1
+        #print(condata)
+        
+        #Create empty lists
+        #Lists with particle ids
+        self.I=[]
+        self.J=[]
+        
+        #Lists with forces
+        fn0=[]
+        ft0=[]
+        
+        #Frictional or sliding list
+        fm0=[]
+        
+        #Drop duplicates
+        for k in range(len(condata[:,0])):
+            # INSERT HERE: Pegs is eithe with double contacts or with single force-balanced
+            # Currently fudged: reading only first occurence
+            # to do: Solution: also read other one and average forces (with correct sign, careful)
+            if condata[:,1][k] > condata[:,2][k]:
+                #Add contact id's
+                i = condata[:,1][k].astype(int)
+                j = condata[:,2][k].astype(int)
+                if j>0:
+                    #print("Found contact between particle " + str(i) + " and " + str(j))
+                    argi = np.argwhere(self.id == i).flatten()[0]
+                    #print("which lives at position  " + str(argi))
+                    argj = np.argwhere(self.id == j).flatten()[0]
+                    #print("and  " + str(argj) + " of the particle list.")
+                                        
+                    #For now we identify particle id's with indices in the list. Not ideal for debugging, but it works.                   
+                    self.I.append(argi)
+                    self.J.append(argj)
+                    
+                    #Extract forces (first tangential and then normal in the list)
+                    fn = condata[:,4][k]
+                    ft = condata[:,3][k]
+                    fn0.append(fn)
+                    ft0.append(ft)
+                    
+                    #Determine frictional or sliding
+                    if (abs(ft)/fn>self.mu):
+                        fm0.append(1)
+                    else:
+                        fm0.append(0)
+        
+        #Final arrays
+        self.ncon=len(fm0)
+        #self.I = np.array(self.I)
+        #self.J = np.array(self.J)
+        self.fnor=np.array(fn0)
+        self.ftan=np.array(ft0)
+        self.fullmobi=np.array(fm0)
+        
+        self.nx=np.zeros(self.ncon)
+        self.ny=np.zeros(self.ncon)
+        for k in range(self.ncon):
+            x1=self.x[self.I[k]]
+            y1=self.y[self.I[k]]
+            x2=self.x[self.J[k]]
+            y2=self.y[self.J[k]]
+            rij=np.sqrt((x1-x2)**2+(y1-y2)**2)
+            self.nx[k]=(x2-x1)/rij
+            self.ny[k]=(y2-y1)/rij
+
+       
+        return 0
+
+
             
 
 
